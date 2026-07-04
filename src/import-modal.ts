@@ -13,6 +13,8 @@ import { decodePackInput } from "./encoding";
 import { StarterPack } from "./types";
 import type StarterPacksPlugin from "./main";
 
+const sleep = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms));
+
 /** Receiving side: paste a link/code (or arrive pre-loaded from an
  * obsidian:// link), preview the pack, and install what's missing. */
 export class ImportPackModal extends Modal {
@@ -20,6 +22,16 @@ export class ImportPackModal extends Modal {
   private catalog: Map<string, CatalogEntry> | null = null;
   private busy = new Set<string>();
   private listEl: HTMLElement | null = null;
+  private progressHost: HTMLElement | null = null;
+  private installAllBtn: HTMLButtonElement | null = null;
+  private installing = false;
+
+  /** Gap between installs. GitHub's *primary* rate limit (60 unauthenticated
+   * req/hr) is a fixed count regardless of pacing, but its *secondary* abuse
+   * limits punish rapid bursts — so spacing the release lookups out makes a
+   * multi-plugin install far less likely to get throttled, and gives the user
+   * a visible, non-frantic progress cadence. */
+  private static readonly STAGGER_MS = 1200;
 
   constructor(
     app: App,
@@ -114,8 +126,12 @@ export class ImportPackModal extends Modal {
     const actions = this.contentEl.createDiv({ cls: "starter-packs-button-row starter-packs-import-actions" });
     const installAll = actions.createEl("button", { text: "Install all missing", cls: "mod-cta" });
     installAll.addEventListener("click", () => void this.installAllMissing());
+    this.installAllBtn = installAll;
     const refresh = actions.createEl("button", { text: "Refresh status" });
     refresh.addEventListener("click", () => this.renderList());
+
+    // Progress bar host — stays empty (and collapsed) until an install run.
+    this.progressHost = this.contentEl.createDiv({ cls: "starter-packs-progress" });
 
     this.listEl = this.contentEl.createDiv({ cls: "starter-packs-plugin-list" });
     this.renderList();
@@ -220,6 +236,7 @@ export class ImportPackModal extends Modal {
   }
 
   private async installAllMissing(): Promise<void> {
+    if (this.installing) return;
     const pack = this.pack!;
     const missing = pack.plugins.filter((p) => pluginStatus(this.app, p.id) === "not-installed");
     if (!missing.length) {
@@ -237,34 +254,87 @@ export class ImportPackModal extends Modal {
     const ok = await confirm(
       this.app,
       "Install all missing plugins?",
-      `This downloads and installs ${missing.length} plugin${missing.length === 1 ? "" : "s"} from their GitHub releases${enable ? " and enables them" : ""}. Only install packs from people you trust — plugins run with full access to your vault.`,
+      `This downloads and installs ${missing.length} plugin${missing.length === 1 ? "" : "s"} from their GitHub releases${enable ? " and enables them" : ""}, one at a time. Only install packs from people you trust — plugins run with full access to your vault.`,
       `Install ${missing.length}`
     );
     if (!ok) return;
 
+    this.installing = true;
+    const total = missing.length;
     let done = 0;
     const failures: string[] = [];
-    for (const p of missing) {
-      this.busy.add(p.id);
-      this.renderList();
+
+    // Persistent toast so progress + completion still reach the user if they
+    // close the modal mid-run. Updated in place each step.
+    const notice = new Notice("", 0);
+    const setNotice = (msg: string) => {
       try {
-        await installPluginDirect(this.app, p.id, { enable });
-        done++;
-      } catch (e) {
-        failures.push(`${p.name}: ${e instanceof Error ? e.message : e}`);
-      } finally {
-        this.busy.delete(p.id);
-        this.renderList();
+        notice.setMessage(`[Starter Packs] ${msg}`);
+      } catch {
+        notice.messageEl?.setText(`[Starter Packs] ${msg}`);
       }
+    };
+
+    if (this.installAllBtn) {
+      this.installAllBtn.disabled = true;
+      this.installAllBtn.setText("Installing…");
     }
+
+    try {
+      for (let i = 0; i < missing.length; i++) {
+        const p = missing[i];
+        this.renderProgress(done, total, p.name);
+        setNotice(`Installing ${p.name} — ${i + 1} of ${total}…`);
+        this.busy.add(p.id);
+        this.renderList();
+        try {
+          await installPluginDirect(this.app, p.id, { enable });
+          done++;
+        } catch (e) {
+          failures.push(`${p.name}: ${e instanceof Error ? e.message : e}`);
+        } finally {
+          this.busy.delete(p.id);
+          this.renderList();
+        }
+        this.renderProgress(done, total, null);
+        // Stagger between installs (skip the wait after the last one).
+        if (i < missing.length - 1) await sleep(ImportPackModal.STAGGER_MS);
+      }
+    } finally {
+      this.installing = false;
+      if (this.installAllBtn) {
+        this.installAllBtn.disabled = false;
+        this.installAllBtn.setText("Install all missing");
+      }
+      this.progressHost?.empty();
+    }
+
     if (failures.length) {
-      new Notice(
-        `[Starter Packs] Installed ${done}/${missing.length}. Failed — ${failures.join("; ")}`,
-        0
+      setNotice(
+        `Installed ${done}/${total} from "${pack.name}". Failed — ${failures.join("; ")}`
       );
+      // Failures deserve a lingering notice; the one above is persistent (0),
+      // so leave it up for the user to read and dismiss.
     } else {
-      new Notice(`[Starter Packs] ✅ Installed ${done} plugin${done === 1 ? "" : "s"} from "${pack.name}"`);
+      setNotice(`✅ All ${done} plugin${done === 1 ? "" : "s"} from "${pack.name}" installed${enable ? " and enabled" : ""} — ready to use`);
+      window.setTimeout(() => notice.hide(), 6000);
     }
+  }
+
+  /** Render the in-modal progress bar. `currentName` non-null = a step is in
+   * flight; null = between/after steps. */
+  private renderProgress(done: number, total: number, currentName: string | null): void {
+    const host = this.progressHost;
+    if (!host) return;
+    host.empty();
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    const text = host.createDiv({ cls: "starter-packs-progress-text" });
+    text.setText(
+      currentName ? `Installing ${currentName} — ${done + 1} of ${total}…` : `${done} of ${total} installed`
+    );
+    const bar = host.createDiv({ cls: "starter-packs-progress-bar" });
+    const fill = bar.createDiv({ cls: "starter-packs-progress-fill" });
+    fill.style.width = `${pct}%`;
   }
 
   onClose(): void {

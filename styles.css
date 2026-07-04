@@ -42,6 +42,30 @@
   flex: 1;
 }
 
+.starter-packs-progress {
+  margin: 4px 0 10px;
+}
+.starter-packs-progress:empty {
+  display: none;
+}
+.starter-packs-progress-text {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  margin-bottom: 4px;
+}
+.starter-packs-progress-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--background-modifier-border);
+  overflow: hidden;
+}
+.starter-packs-progress-fill {
+  height: 100%;
+  background: var(--interactive-accent);
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+
 .starter-packs-plugin-list {
   max-height: 320px;
   overflow-y: auto;
