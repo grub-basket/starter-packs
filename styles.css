@@ -1,0 +1,152 @@
+/* Starter Packs — all colors via theme variables so light + dark both work. */
+
+.starter-packs-modal {
+  width: min(640px, 90vw);
+}
+
+.starter-packs-button-row {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+.starter-packs-top-row {
+  justify-content: flex-start;
+  margin-top: 0;
+}
+.starter-packs-import-actions {
+  justify-content: flex-start;
+}
+
+.starter-packs-picker-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 12px;
+}
+.starter-packs-picker-header h3 {
+  margin: 0;
+}
+.starter-packs-count {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.starter-packs-picker-controls {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+}
+.starter-packs-picker-controls input[type="search"] {
+  flex: 1;
+}
+
+.starter-packs-plugin-list {
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  padding: 4px;
+}
+
+.starter-packs-plugin-row,
+.starter-packs-pack-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: var(--radius-s);
+}
+.starter-packs-plugin-row:hover,
+.starter-packs-pack-row:hover {
+  background: var(--background-modifier-hover);
+}
+.starter-packs-pack-row {
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.starter-packs-plugin-label {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+.starter-packs-plugin-name {
+  color: var(--text-normal);
+}
+.starter-packs-plugin-meta {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.starter-packs-row-buttons {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.starter-packs-badge {
+  flex-shrink: 0;
+  font-size: var(--font-ui-smaller);
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-muted);
+}
+.starter-packs-badge-enabled {
+  color: var(--text-success);
+  border-color: var(--text-success);
+}
+.starter-packs-badge-disabled {
+  color: var(--text-warning);
+  border-color: var(--text-warning);
+}
+.starter-packs-badge-unknown {
+  color: var(--text-error);
+  border-color: var(--text-error);
+}
+
+.starter-packs-empty {
+  color: var(--text-muted);
+  padding: 12px 4px;
+}
+
+.starter-packs-error {
+  color: var(--text-error);
+  min-height: 1.2em;
+  margin-top: 6px;
+}
+
+.starter-packs-share-meta {
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.starter-packs-share-section {
+  margin-top: 14px;
+}
+.starter-packs-share-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.starter-packs-share-head h3 {
+  margin: 0;
+}
+.starter-packs-share-desc {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  margin: 4px 0 6px;
+}
+.starter-packs-share-value {
+  width: 100%;
+  font-family: var(--font-monospace);
+  font-size: var(--font-ui-smaller);
+  resize: vertical;
+}
+
+.starter-packs-archived .starter-packs-plugin-name {
+  color: var(--text-muted);
+}
