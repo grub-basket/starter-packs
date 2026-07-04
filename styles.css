@@ -16,6 +16,7 @@
 }
 .starter-packs-import-actions {
   justify-content: flex-start;
+  margin-bottom: 12px;
 }
 
 .starter-packs-picker-header {
