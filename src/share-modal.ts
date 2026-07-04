@@ -1,6 +1,7 @@
-import { App, Modal } from "obsidian";
+import { App, Modal, Notice } from "obsidian";
 import { copyToClipboard } from "./catalog";
 import { packToCode, packToLink, packToMarkdown } from "./encoding";
+import { exportPackAsNote } from "./note-export";
 import { StarterPack } from "./types";
 
 /** Share surface for one pack: link, code, and markdown forms, each with a
@@ -17,6 +18,11 @@ export class SharePackModal extends Modal {
     const meta = this.contentEl.createDiv({ cls: "starter-packs-share-meta" });
     const by = this.pack.author ? ` · by ${this.pack.author}` : "";
     meta.setText(`${this.pack.plugins.length} plugins${by}`);
+
+    const actions = this.contentEl.createDiv({ cls: "starter-packs-button-row starter-packs-import-actions" });
+    const exportBtn = actions.createEl("button", { text: "Export as note" });
+    exportBtn.setAttribute("aria-label", "Write this pack into your vault as a readable, re-importable note");
+    exportBtn.addEventListener("click", () => void this.exportAsNote());
 
     this.section(
       "Link",
@@ -51,6 +57,17 @@ export class SharePackModal extends Modal {
     ta.rows = rows;
     ta.readOnly = true;
     ta.addEventListener("focus", () => ta.select());
+  }
+
+  private async exportAsNote(): Promise<void> {
+    try {
+      const file = await exportPackAsNote(this.app, this.pack);
+      new Notice(`[Starter Packs] Exported to ${file.path}`);
+      this.close();
+      await this.app.workspace.getLeaf(true).openFile(file);
+    } catch (e) {
+      new Notice(`[Starter Packs] Couldn't export note: ${e instanceof Error ? e.message : e}`, 8000);
+    }
   }
 
   onClose(): void {
