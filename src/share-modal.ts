@@ -17,7 +17,10 @@ export class SharePackModal extends Modal {
 
     const meta = this.contentEl.createDiv({ cls: "starter-packs-share-meta" });
     const by = this.pack.author ? ` · by ${this.pack.author}` : "";
-    meta.setText(`${this.pack.plugins.length} plugins${by}`);
+    const p = this.pack.plugins.length;
+    const t = this.pack.themes.length;
+    const themeBit = t ? `, ${t} theme${t === 1 ? "" : "s"}` : "";
+    meta.setText(`${p} plugin${p === 1 ? "" : "s"}${themeBit}${by}`);
 
     const actions = this.contentEl.createDiv({ cls: "starter-packs-button-row starter-packs-import-actions" });
     const exportBtn = actions.createEl("button", { text: "Export as note" });

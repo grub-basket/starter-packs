@@ -7,6 +7,19 @@ import { SharePackModal } from "./share-modal";
 import { StarterPack } from "./types";
 import type StarterPacksPlugin from "./main";
 
+/** "N plugins" / "N plugins, M themes" / "M themes" — never a bare "0 plugins"
+ * for a theme-only pack. */
+function packContents(pack: StarterPack): string {
+  const parts: string[] = [];
+  if (pack.plugins.length || !pack.themes.length) {
+    parts.push(`${pack.plugins.length} plugin${pack.plugins.length === 1 ? "" : "s"}`);
+  }
+  if (pack.themes.length) {
+    parts.push(`${pack.themes.length} theme${pack.themes.length === 1 ? "" : "s"}`);
+  }
+  return parts.join(", ");
+}
+
 /** Home surface: your packs (share/edit/duplicate/archive), packs shared with
  * you, and an archived section with restore. Nothing here hard-deletes. */
 export class ManagePacksModal extends Modal {
@@ -49,7 +62,7 @@ export class ManagePacksModal extends Modal {
       label.createDiv({ text: pack.name, cls: "starter-packs-plugin-name" });
       const by = pack.author ? ` · ${pack.author}` : "";
       label.createDiv({
-        text: `${pack.plugins.length} plugins${by} · updated ${pack.updatedAt.slice(0, 10)}`,
+        text: `${packContents(pack)}${by} · updated ${pack.updatedAt.slice(0, 10)}`,
         cls: "starter-packs-plugin-meta",
       });
       const btns = row.createDiv({ cls: "starter-packs-row-buttons" });
@@ -74,7 +87,7 @@ export class ManagePacksModal extends Modal {
         label.createDiv({ text: rec.pack.name, cls: "starter-packs-plugin-name" });
         const by = rec.pack.author ? `by ${rec.pack.author} · ` : "";
         label.createDiv({
-          text: `${by}${rec.pack.plugins.length} plugins · imported ${rec.importedAt.slice(0, 10)}`,
+          text: `${by}${packContents(rec.pack)} · imported ${rec.importedAt.slice(0, 10)}`,
           cls: "starter-packs-plugin-meta",
         });
         const btns = row.createDiv({ cls: "starter-packs-row-buttons" });
@@ -97,7 +110,7 @@ export class ManagePacksModal extends Modal {
         const label = row.createDiv({ cls: "starter-packs-plugin-label" });
         label.createDiv({ text: pack.name, cls: "starter-packs-plugin-name" });
         label.createDiv({
-          text: `${pack.plugins.length} plugins`,
+          text: packContents(pack),
           cls: "starter-packs-plugin-meta",
         });
         const btns = row.createDiv({ cls: "starter-packs-row-buttons" });
@@ -114,6 +127,7 @@ export class ManagePacksModal extends Modal {
       id: randomId(),
       name: `${pack.name} (copy)`,
       plugins: pack.plugins.map((p) => ({ ...p })),
+      themes: pack.themes.map((t) => ({ ...t })),
       createdAt: now,
       updatedAt: now,
     };
@@ -151,6 +165,7 @@ export class ManagePacksModal extends Modal {
       ...pack,
       id: randomId(),
       plugins: pack.plugins.map((p) => ({ ...p })),
+      themes: pack.themes.map((t) => ({ ...t })),
       createdAt: now,
       updatedAt: now,
     };

@@ -10,6 +10,14 @@ import {
 } from "./catalog";
 import { confirm } from "./confirm-modal";
 import { decodePackInput } from "./encoding";
+import {
+  ThemeCatalogEntry,
+  applyTheme,
+  canManageThemes,
+  fetchThemeCatalog,
+  installThemeFromCatalog,
+  themeStatus,
+} from "./theme-catalog";
 import { StarterPack } from "./types";
 import type StarterPacksPlugin from "./main";
 
@@ -20,8 +28,10 @@ const sleep = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms))
 export class ImportPackModal extends Modal {
   private pack: StarterPack | null;
   private catalog: Map<string, CatalogEntry> | null = null;
+  private themeCatalog: Map<string, ThemeCatalogEntry> | null = null;
   private busy = new Set<string>();
   private listEl: HTMLElement | null = null;
+  private themeListEl: HTMLElement | null = null;
   private progressHost: HTMLElement | null = null;
   private installAllBtn: HTMLButtonElement | null = null;
   private installing = false;
@@ -118,7 +128,8 @@ export class ImportPackModal extends Modal {
 
     const meta = this.contentEl.createDiv({ cls: "starter-packs-share-meta" });
     const by = pack.author ? `Shared by ${pack.author} · ` : "";
-    meta.setText(`${by}${pack.plugins.length} plugin${pack.plugins.length === 1 ? "" : "s"}`);
+    const themeBit = pack.themes.length ? ` · ${pack.themes.length} theme${pack.themes.length === 1 ? "" : "s"}` : "";
+    meta.setText(`${by}${pack.plugins.length} plugin${pack.plugins.length === 1 ? "" : "s"}${themeBit}`);
     if (pack.description) {
       this.contentEl.createEl("p", { text: pack.description, cls: "starter-packs-share-desc" });
     }
@@ -128,22 +139,29 @@ export class ImportPackModal extends Modal {
     installAll.addEventListener("click", () => void this.installAllMissing());
     this.installAllBtn = installAll;
     const refresh = actions.createEl("button", { text: "Refresh status" });
-    refresh.addEventListener("click", () => this.renderList());
+    refresh.addEventListener("click", () => this.redraw());
 
     // Progress bar host — stays empty (and collapsed) until an install run.
     this.progressHost = this.contentEl.createDiv({ cls: "starter-packs-progress" });
 
-    this.listEl = this.contentEl.createDiv({ cls: "starter-packs-plugin-list" });
-    this.renderList();
+    if (pack.plugins.length) {
+      this.contentEl.createEl("h3", { text: "Plugins", cls: "starter-packs-section-h" });
+      this.listEl = this.contentEl.createDiv({ cls: "starter-packs-plugin-list" });
+    }
+    if (pack.themes.length) {
+      this.contentEl.createEl("h3", { text: "Themes", cls: "starter-packs-section-h" });
+      this.themeListEl = this.contentEl.createDiv({ cls: "starter-packs-plugin-list" });
+    }
+    this.redraw();
 
-    // Catalog arrives async; re-render rows once it's here so unknown ids get flagged.
+    // Catalogs arrive async; re-render once they're here so unknown ids/names
+    // get flagged and direct-install becomes available.
     void fetchCatalog()
       .then((c) => {
         this.catalog = c;
         this.renderList();
       })
       .catch(() => {
-        // Offline / rate-limited: statuses still work, direct install won't.
         this.catalog = null;
         if (this.listEl) {
           this.contentEl
@@ -151,11 +169,27 @@ export class ImportPackModal extends Modal {
             .setText("Couldn't load the community catalog (offline?). You can still open each plugin's page.");
         }
       });
+    if (pack.themes.length) {
+      void fetchThemeCatalog()
+        .then((c) => {
+          this.themeCatalog = c;
+          this.renderThemes();
+        })
+        .catch(() => {
+          this.themeCatalog = null;
+        });
+    }
+  }
+
+  private redraw(): void {
+    this.renderList();
+    this.renderThemes();
   }
 
   private renderList(): void {
     const pack = this.pack!;
-    const listEl = this.listEl!;
+    const listEl = this.listEl;
+    if (!listEl) return;
     listEl.empty();
     for (const p of pack.plugins) {
       const row = listEl.createDiv({ cls: "starter-packs-plugin-row" });
@@ -200,6 +234,75 @@ export class ImportPackModal extends Modal {
     }
   }
 
+  /** Busy-set key for a theme (namespaced so a theme name can't collide with a
+   * plugin id). */
+  private themeKey(name: string): string {
+    return `theme:${name}`;
+  }
+
+  private renderThemes(): void {
+    const pack = this.pack!;
+    const listEl = this.themeListEl;
+    if (!listEl) return;
+    listEl.empty();
+    for (const t of pack.themes) {
+      const row = listEl.createDiv({ cls: "starter-packs-plugin-row" });
+      const label = row.createDiv({ cls: "starter-packs-plugin-label" });
+      label.createDiv({ text: t.name, cls: "starter-packs-plugin-name" });
+      label.createDiv({ text: t.author ? `${t.author} · theme` : "theme", cls: "starter-packs-plugin-meta" });
+
+      const status = themeStatus(this.app, t.name);
+      const inCatalog = this.themeCatalog ? this.themeCatalog.has(t.name) : null;
+      const badgeClass = status === "active" ? "enabled" : status === "installed" ? "disabled" : "not-installed";
+      const badge = row.createSpan({ cls: `starter-packs-badge starter-packs-badge-${badgeClass}` });
+      badge.setText(status === "active" ? "Active" : status === "installed" ? "Installed" : "Not installed");
+      if (status === "not-installed" && inCatalog === false) {
+        badge.setText("Not in catalog");
+        badge.addClass("starter-packs-badge-unknown");
+      }
+
+      const btns = row.createDiv({ cls: "starter-packs-row-buttons" });
+      const canInstall = this.plugin.settings.directInstall && canManageThemes(this.app);
+      if (status === "not-installed" && inCatalog !== false && canInstall) {
+        const install = btns.createEl("button", { text: "Install", cls: "mod-cta" });
+        if (this.busy.has(this.themeKey(t.name))) {
+          install.setText("Installing…");
+          install.disabled = true;
+        }
+        install.addEventListener("click", () => void this.installOneTheme(t.name));
+      }
+      // "Apply" for an installed-but-inactive theme (Obsidian allows one active
+      // theme at a time, so only offer it when it isn't already active).
+      if (status === "installed") {
+        const apply = btns.createEl("button", { text: "Apply" });
+        apply.addEventListener("click", () => {
+          if (applyTheme(this.app, t.name)) new Notice(`[Starter Packs] Applied theme ${t.name}`);
+          this.renderThemes();
+        });
+      }
+    }
+  }
+
+  private async installOneTheme(name: string): Promise<void> {
+    const key = this.themeKey(name);
+    if (this.busy.has(key)) return;
+    if (!this.plugin.settings.directInstall || !canManageThemes(this.app)) {
+      new Notice("[Starter Packs] Install themes from Settings → Appearance in this Obsidian version", 8000);
+      return;
+    }
+    this.busy.add(key);
+    this.renderThemes();
+    try {
+      const res = await installThemeFromCatalog(this.app, name, { apply: false });
+      new Notice(`[Starter Packs] ${res.message}`);
+    } catch (e) {
+      new Notice(`[Starter Packs] Couldn't install theme ${name}: ${e instanceof Error ? e.message : e}`, 8000);
+    } finally {
+      this.busy.delete(key);
+      this.renderThemes();
+    }
+  }
+
   private async installOne(id: string, name: string): Promise<void> {
     if (this.busy.has(id)) return;
     if (!this.plugin.settings.directInstall || !canDirectInstall(this.app)) {
@@ -238,29 +341,62 @@ export class ImportPackModal extends Modal {
   private async installAllMissing(): Promise<void> {
     if (this.installing) return;
     const pack = this.pack!;
-    const missing = pack.plugins.filter((p) => pluginStatus(this.app, p.id) === "not-installed");
-    if (!missing.length) {
-      new Notice("[Starter Packs] Nothing to install — everything is already here");
-      return;
-    }
-    if (!this.plugin.settings.directInstall || !canDirectInstall(this.app)) {
+    if (!this.plugin.settings.directInstall) {
       new Notice(
-        "[Starter Packs] Direct install is off — use the per-plugin View buttons to install from the community browser",
+        "[Starter Packs] Direct install is off — use the per-row View/Install buttons instead",
         8000
       );
       return;
     }
     const enable = this.plugin.settings.enableAfterInstall;
+
+    // Unified work list: missing plugins first, then missing themes. Known
+    // not-in-catalog items are skipped (they can't be auto-installed anyway).
+    const work: { label: string; key: string; run: () => Promise<void> }[] = [];
+    if (canDirectInstall(this.app)) {
+      for (const p of pack.plugins) {
+        if (pluginStatus(this.app, p.id) !== "not-installed") continue;
+        if (this.catalog && !this.catalog.has(p.id)) continue;
+        work.push({
+          label: p.name,
+          key: p.id,
+          run: () => installPluginDirect(this.app, p.id, { enable }).then(() => undefined),
+        });
+      }
+    }
+    if (canManageThemes(this.app)) {
+      for (const t of pack.themes) {
+        if (themeStatus(this.app, t.name) !== "not-installed") continue;
+        if (this.themeCatalog && !this.themeCatalog.has(t.name)) continue;
+        work.push({
+          label: t.name,
+          key: this.themeKey(t.name),
+          run: () => installThemeFromCatalog(this.app, t.name, { apply: false }).then(() => undefined),
+        });
+      }
+    }
+
+    if (!work.length) {
+      new Notice("[Starter Packs] Nothing to install — everything is already here (or not directly installable)");
+      return;
+    }
+
+    const nPlugins = work.filter((w) => !w.key.startsWith("theme:")).length;
+    const nThemes = work.length - nPlugins;
+    const parts = [
+      nPlugins ? `${nPlugins} plugin${nPlugins === 1 ? "" : "s"}${enable ? " (enabled)" : ""}` : "",
+      nThemes ? `${nThemes} theme${nThemes === 1 ? "" : "s"}` : "",
+    ].filter(Boolean);
     const ok = await confirm(
       this.app,
-      "Install all missing plugins?",
-      `This downloads and installs ${missing.length} plugin${missing.length === 1 ? "" : "s"} from their GitHub releases${enable ? " and enables them" : ""}, one at a time. Only install packs from people you trust — plugins run with full access to your vault.`,
-      `Install ${missing.length}`
+      "Install all missing?",
+      `This downloads and installs ${parts.join(" and ")} one at a time. Only install packs from people you trust — plugins run with full access to your vault.`,
+      `Install ${work.length}`
     );
     if (!ok) return;
 
     this.installing = true;
-    const total = missing.length;
+    const total = work.length;
     let done = 0;
     const failures: string[] = [];
 
@@ -281,24 +417,24 @@ export class ImportPackModal extends Modal {
     }
 
     try {
-      for (let i = 0; i < missing.length; i++) {
-        const p = missing[i];
-        this.renderProgress(done, total, p.name);
-        setNotice(`Installing ${p.name} — ${i + 1} of ${total}…`);
-        this.busy.add(p.id);
-        this.renderList();
+      for (let i = 0; i < work.length; i++) {
+        const item = work[i];
+        this.renderProgress(done, total, item.label);
+        setNotice(`Installing ${item.label} — ${i + 1} of ${total}…`);
+        this.busy.add(item.key);
+        this.redraw();
         try {
-          await installPluginDirect(this.app, p.id, { enable });
+          await item.run();
           done++;
         } catch (e) {
-          failures.push(`${p.name}: ${e instanceof Error ? e.message : e}`);
+          failures.push(`${item.label}: ${e instanceof Error ? e.message : e}`);
         } finally {
-          this.busy.delete(p.id);
-          this.renderList();
+          this.busy.delete(item.key);
+          this.redraw();
         }
         this.renderProgress(done, total, null);
         // Stagger between installs (skip the wait after the last one).
-        if (i < missing.length - 1) await sleep(ImportPackModal.STAGGER_MS);
+        if (i < work.length - 1) await sleep(ImportPackModal.STAGGER_MS);
       }
     } finally {
       this.installing = false;
@@ -310,13 +446,10 @@ export class ImportPackModal extends Modal {
     }
 
     if (failures.length) {
-      setNotice(
-        `Installed ${done}/${total} from "${pack.name}". Failed — ${failures.join("; ")}`
-      );
-      // Failures deserve a lingering notice; the one above is persistent (0),
-      // so leave it up for the user to read and dismiss.
+      // Persistent (0) so the user can read what failed and dismiss it.
+      setNotice(`Installed ${done}/${total} from "${pack.name}". Failed — ${failures.join("; ")}`);
     } else {
-      setNotice(`✅ All ${done} plugin${done === 1 ? "" : "s"} from "${pack.name}" installed${enable ? " and enabled" : ""} — ready to use`);
+      setNotice(`✅ All ${done} item${done === 1 ? "" : "s"} from "${pack.name}" installed — ready to use`);
       window.setTimeout(() => notice.hide(), 6000);
     }
   }

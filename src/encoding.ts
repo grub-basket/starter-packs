@@ -32,6 +32,9 @@ export function packToPayload(pack: StarterPack): PackPayloadV1 {
     p: pack.plugins.map((p) => [p.id, p.name, p.author]),
   };
   if (pack.description) payload.d = pack.description;
+  // Only emit `t` when there are themes, so plugin-only packs stay byte-identical
+  // to the pre-theme format (shorter links, no needless churn).
+  if (pack.themes.length) payload.t = pack.themes.map((t) => [t.name, t.author]);
   return payload;
 }
 
@@ -107,12 +110,20 @@ export function payloadToPack(payload: PackPayloadV1): StarterPack {
       name: cap(typeof e[1] === "string" && e[1] ? e[1] : String(e[0]), 200),
       author: cap(typeof e[2] === "string" ? e[2] : "", 200),
     }));
+  const themes = (Array.isArray(payload.t) ? payload.t : [])
+    .slice(0, 100)
+    .filter((e) => Array.isArray(e) && typeof e[0] === "string" && e[0].length > 0)
+    .map((e) => ({
+      name: cap(String(e[0]), 200),
+      author: cap(typeof e[1] === "string" ? e[1] : "", 200),
+    }));
   return {
     id: randomId(),
     name: cap(payload.n || "Untitled pack", 200),
     author: cap(typeof payload.a === "string" ? payload.a : "", 200),
     description: cap(typeof payload.d === "string" ? payload.d : "", 2000),
     plugins,
+    themes,
     createdAt: now,
     updatedAt: now,
   };
@@ -127,12 +138,24 @@ export function packToMarkdown(pack: StarterPack): string {
   const lines: string[] = [];
   lines.push(`## ${pack.name}`);
   const by = pack.author ? ` by ${pack.author}` : "";
-  lines.push(`A starter pack of ${pack.plugins.length} Obsidian plugin${pack.plugins.length === 1 ? "" : "s"}${by}.`);
+  const themeCount = pack.themes.length;
+  const themeBit = themeCount ? ` and ${themeCount} theme${themeCount === 1 ? "" : "s"}` : "";
+  lines.push(
+    `A starter pack of ${pack.plugins.length} Obsidian plugin${pack.plugins.length === 1 ? "" : "s"}${themeBit}${by}.`
+  );
   if (pack.description) lines.push("", pack.description);
   lines.push("");
+  if (pack.plugins.length) lines.push("**Plugins**");
   for (const p of pack.plugins) {
     const author = p.author ? ` — ${p.author}` : "";
     lines.push(`- [${p.name}](obsidian://show-plugin?id=${encodeURIComponent(p.id)})${author}`);
+  }
+  if (themeCount) {
+    lines.push("", "**Themes**");
+    for (const t of pack.themes) {
+      const author = t.author ? ` — ${t.author}` : "";
+      lines.push(`- ${t.name}${author}`);
+    }
   }
   lines.push("");
   lines.push(`**One-click import** (needs the Starter Packs plugin): [open pack](${packToLink(pack)})`);

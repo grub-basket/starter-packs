@@ -66,6 +66,10 @@
   transition: width 0.25s ease;
 }
 
+.starter-packs-section-h {
+  margin: 14px 0 6px;
+}
+
 .starter-packs-plugin-list {
   max-height: 320px;
   overflow-y: auto;

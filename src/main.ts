@@ -55,6 +55,11 @@ export default class StarterPacksPlugin extends Plugin {
     this.settings.packs ??= [];
     this.settings.archivedPacks ??= [];
     this.settings.importedPacks ??= [];
+    // `themes` was added after the first release; backfill it on every stored
+    // pack so nothing downstream has to guard against `undefined`.
+    for (const pack of this.settings.packs) pack.themes ??= [];
+    for (const pack of this.settings.archivedPacks) pack.themes ??= [];
+    for (const rec of this.settings.importedPacks) rec.pack.themes ??= [];
   }
 
   async saveSettings(): Promise<void> {
