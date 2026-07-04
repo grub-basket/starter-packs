@@ -1,0 +1,22 @@
+node_modules/
+main.js
+*.map
+.DS_Store
+.deploy-targets
+
+# Internal / thinking docs (default-gitignored per All Projects convention)
+NOTES.md
+TODO.md
+TODOS.md
+PLANNING.md
+OPEN-QUESTIONS.md
+BRAINSTORM.md
+DECISIONS.md
+docs/planning/
+docs/internal/
+docs/brainstorm/
+docs/scratch/
+.claude/requests-log.md
+.claude/chat-history/
+_test-output/
+test-artifacts/
