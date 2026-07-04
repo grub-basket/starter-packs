@@ -11,12 +11,14 @@ Share your favorite Obsidian plugins as a **starter pack** — a named, curated 
    - **Code** — `OSP1:…` — paste-able anywhere, survives forums that mangle links.
    - **Markdown** — a readable list (every plugin linked to its community page) with the link and code included, ready for a forum post or note.
 
+You can also **Export as note** — write the pack into your vault as a readable note (every plugin linked, with the import link and code embedded), handy for keeping a copy or posting it somewhere.
+
 Packs are self-contained: the link/code carries the pack name, your name, and each plugin's name and author, so recipients see a full preview even before installing anything.
 
 ## Receiving
 
 - Click a starter-pack link (Obsidian opens the preview), or run **Import a starter pack** and paste a link or code.
-- The preview shows what's in the pack and what you already have. Install plugins one at a time, or **Install all missing** — plugins download from their official GitHub releases and can be enabled automatically.
+- The preview shows what's in the pack and what you already have. Install plugins one at a time, or **Install all missing** — plugins install one after another (spaced out to stay friendly with GitHub's rate limits), with a progress bar in the modal and a notification that keeps counting even if you close the window, so you know exactly when everything is ready.
 - Imported packs are kept under **Shared with me** so you can come back to them later, or **Save as mine** to edit and re-share.
 
 Only import packs from people you trust — community plugins run with full access to your vault. Direct install can be turned off in settings, in which case installs go through Obsidian's own community-browser pages.
@@ -25,6 +27,13 @@ Only import packs from people you trust — community plugins run with full acce
 
 - Archiving a pack never breaks links you've already shared — they carry their own copy of the list.
 - Plugins not in the community catalog (e.g. beta plugins) are shown and flagged, but can't be auto-installed.
+- **Mobile:** the plugin is built to work on mobile, but that path isn't tested and has no dedicated QA yet — treat mobile as best-effort for now.
+
+### A note on author names
+
+Author names on a pack are **informational, not verified** — there's no identity system, so anyone can put any name on a pack. We chose to keep this simple rather than build a contributor/provenance system.
+
+When you use **Save as mine** on a pack someone shared, it keeps the **original** author's name until you edit and save the pack — at which point it becomes yours. This is a deliberate trade-off: it preserves attribution by default, but it also means a pack you modify and re-share still carries the original author's name until you make it your own. There's no enforcement in either direction; it's on the good faith of whoever's sharing.
 
 ## Similar plugins
 
