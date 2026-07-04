@@ -25,3 +25,22 @@ Only import packs from people you trust — community plugins run with full acce
 
 - Archiving a pack never breaks links you've already shared — they carry their own copy of the list.
 - Plugins not in the community catalog (e.g. beta plugins) are shown and flagged, but can't be auto-installed.
+
+## Similar plugins
+
+The "install a list of plugins" idea isn't new — a few plugins touch this space:
+
+- **[Share my plugin list](https://github.com/Benature/obsidian-share-my-plugin-list)** (Benature) — exports your plugins as a markdown list or table with per-plugin one-click install and an "Install all" command. Shares as text you embed in a note.
+- **[Plugin Groups](https://github.com/Mocca101/obsidian-plugin-groups)** (Mocca101) — organizes *already-installed* plugins into groups for bulk enable/disable and staggered startup. Not a sharing tool.
+- **Extension Hub** — a browser for finding and installing plugins across multiple vaults.
+
+**Where Starter Packs is different:** it's built around *curated, named, authored* collections — the "Bluesky starter pack" framing — shared as a link or code that opens an **in-app preview** before anything installs:
+
+| Starter Packs | Share my plugin list |
+|---|---|
+| **Multiple curated, named packs** (pick specific plugins) | Dumps your *whole* current plugin list |
+| **Your name on each pack** | No per-pack authorship |
+| **Share as a link or code** (`obsidian://…` / `OSP1:…`) that opens **in-app** | Markdown text you embed in a note |
+| **Preview screen** before installing | No preview |
+
+The full positioning write-up is in [PITCH.md](PITCH.md).
