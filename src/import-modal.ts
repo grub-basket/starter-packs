@@ -154,7 +154,11 @@ export class ImportPackModal extends Modal {
       const inCatalog = this.catalog ? this.catalog.has(p.id) : null;
       const badge = row.createSpan({ cls: `starter-packs-badge starter-packs-badge-${status}` });
       badge.setText(
-        status === "enabled" ? "Enabled" : status === "disabled" ? "Installed (off)" : "Not installed"
+        status === "enabled"
+          ? "Enabled"
+          : status === "disabled"
+            ? "Installed (Disabled)"
+            : "Not installed"
       );
       if (status === "not-installed" && inCatalog === false) {
         badge.setText("Not in catalog");
