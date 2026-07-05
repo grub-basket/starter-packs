@@ -53,6 +53,7 @@ interface ObsidianPluginsApi {
   installPlugin?: (repo: string, version: string, manifest: PluginManifest) => Promise<void>;
   loadManifests?: () => Promise<void>;
   enablePluginAndSave?: (id: string) => Promise<void>;
+  disablePluginAndSave?: (id: string) => Promise<void>;
 }
 
 function pluginsApi(app: App): ObsidianPluginsApi {
@@ -137,6 +138,14 @@ export async function enablePlugin(app: App, id: string): Promise<boolean> {
   const api = pluginsApi(app);
   if (typeof api.enablePluginAndSave !== "function") return false;
   await api.enablePluginAndSave(id);
+  return true;
+}
+
+/** Best-effort disable for an installed-and-enabled plugin. */
+export async function disablePlugin(app: App, id: string): Promise<boolean> {
+  const api = pluginsApi(app);
+  if (typeof api.disablePluginAndSave !== "function") return false;
+  await api.disablePluginAndSave(id);
   return true;
 }
 

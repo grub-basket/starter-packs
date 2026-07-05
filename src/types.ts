@@ -42,7 +42,9 @@ export interface StarterPacksSettings {
   /** When false, Install buttons open the community-browser page instead of
    * downloading directly. */
   directInstall: boolean;
-  /** Enable plugins right after installing them. */
+  /** Enable plugins right after installing them. Off by default: freshly
+   * installed third-party code stays inert until the user reviews and enables
+   * it (via the per-row Enable button or the preview's "Enable all"). */
   enableAfterInstall: boolean;
 }
 
@@ -52,7 +54,7 @@ export const DEFAULT_SETTINGS: StarterPacksSettings = {
   importedPacks: [],
   defaultAuthor: "",
   directInstall: true,
-  enableAfterInstall: true,
+  enableAfterInstall: false,
 };
 
 /** Shared payload (versioned). Field names are short on purpose — they ride

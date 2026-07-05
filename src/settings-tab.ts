@@ -44,7 +44,9 @@ export class StarterPacksSettingTab extends PluginSettingTab {
 
     new Setting(this.containerEl)
       .setName("Enable after install")
-      .setDesc("Turn plugins on right after installing them from a pack.")
+      .setDesc(
+        "Turn plugins on right after installing them from a pack. Off by default for safety — installed plugins stay disabled until you review them and use the pack's “Enable all” button (or the per-plugin Enable). Only turn this on for packs you fully trust."
+      )
       .addToggle((t) =>
         t.setValue(this.plugin.settings.enableAfterInstall).onChange(async (v) => {
           this.plugin.settings.enableAfterInstall = v;

@@ -2,6 +2,7 @@ import { App, Modal, Notice } from "obsidian";
 import {
   CatalogEntry,
   canDirectInstall,
+  disablePlugin,
   enablePlugin,
   fetchCatalog,
   installPluginDirect,
@@ -140,6 +141,16 @@ export class ImportPackModal extends Modal {
     this.installAllBtn = installAll;
     const refresh = actions.createEl("button", { text: "Refresh status" });
     refresh.addEventListener("click", () => this.redraw());
+
+    // Mass enable/disable for the pack's installed plugins. Plugins are
+    // installed disabled by default (safer), so this is how the user turns the
+    // whole set on after reviewing it — or off again.
+    if (pack.plugins.length) {
+      const enableAll = actions.createEl("button", { text: "Enable all" });
+      enableAll.addEventListener("click", () => void this.setAllEnabled(true));
+      const disableAll = actions.createEl("button", { text: "Disable all" });
+      disableAll.addEventListener("click", () => void this.setAllEnabled(false));
+    }
 
     // Progress bar host — stays empty (and collapsed) until an install run.
     this.progressHost = this.contentEl.createDiv({ cls: "starter-packs-progress" });
@@ -336,6 +347,39 @@ export class ImportPackModal extends Modal {
         : `[Starter Packs] Couldn't enable ${name} — turn it on in Settings → Community plugins`
     );
     this.renderList();
+  }
+
+  /** Enable (or disable) every INSTALLED plugin in this pack at once. Only
+   * touches plugins whose current state differs — not-installed ones are left
+   * alone. Themes are unaffected (Obsidian has one active theme, not a set). */
+  private async setAllEnabled(enable: boolean): Promise<void> {
+    const pack = this.pack!;
+    const want = enable ? "disabled" : "enabled"; // the state we flip FROM
+    const targets = pack.plugins.filter((p) => pluginStatus(this.app, p.id) === want);
+    if (!targets.length) {
+      new Notice(`[Starter Packs] No installed plugins to ${enable ? "enable" : "disable"}`);
+      return;
+    }
+    let done = 0;
+    const failures: string[] = [];
+    for (const p of targets) {
+      const ok = enable
+        ? await enablePlugin(this.app, p.id).catch(() => false)
+        : await disablePlugin(this.app, p.id).catch(() => false);
+      if (ok) done++;
+      else failures.push(p.name);
+      this.redraw();
+    }
+    const verb = enable ? "Enabled" : "Disabled";
+    if (failures.length) {
+      new Notice(
+        `[Starter Packs] ${verb} ${done}/${targets.length}. Couldn't ${enable ? "enable" : "disable"}: ${failures.join(", ")}`,
+        8000
+      );
+    } else {
+      new Notice(`[Starter Packs] ${verb} ${done} plugin${done === 1 ? "" : "s"}`);
+    }
+    this.redraw();
   }
 
   private async installAllMissing(): Promise<void> {
