@@ -20,6 +20,7 @@ Packs are self-contained: the link/code carries the pack name, your name, and ea
 - Click a starter-pack link (Obsidian opens the preview), or run **Import a starter pack** and paste a link or code.
 - The preview shows what's in the pack and what you already have, split into **Plugins** and **Themes**. Install items one at a time, or **Install all missing** — plugins and themes install one after another (spaced out to stay friendly with GitHub's rate limits), with a progress bar in the modal and a notification that keeps counting even if you close the window, so you know exactly when everything is ready.
 - For themes, each row also offers **Apply** once it's installed (Obsidian uses one active theme at a time).
+- **Plugins are installed *disabled* by default**, so nothing runs until you say so. Review the pack, then use **Enable all** (or the per-plugin Enable) to turn them on — and **Disable all** to turn them back off. You can flip the default to auto-enable in settings if you only ever import packs you fully trust.
 - Imported packs are kept under **Shared with me** so you can come back to them later, or **Save as mine** to edit and re-share.
 
 Only import packs from people you trust — community plugins run with full access to your vault. Direct install can be turned off in settings, in which case installs go through Obsidian's own community-browser pages.
