@@ -4,6 +4,7 @@ import { PackEditModal } from "./edit-modal";
 import { ImportPackModal } from "./import-modal";
 import { ManagePacksModal } from "./manager-modal";
 import { StarterPacksSettingTab } from "./settings-tab";
+import { saveChecklistNote } from "./vault-checklist";
 import { DEFAULT_SETTINGS, StarterPacksSettings } from "./types";
 
 export default class StarterPacksPlugin extends Plugin {
@@ -43,6 +44,19 @@ export default class StarterPacksPlugin extends Plugin {
       id: "import-pack",
       name: "Import a starter pack (paste link or code)",
       callback: () => new ImportPackModal(this.app, this).open(),
+    });
+    this.addCommand({
+      id: "vault-replication-checklist",
+      name: "Create a vault replication checklist note",
+      callback: async () => {
+        try {
+          const file = await saveChecklistNote(this.app);
+          new Notice(`[Starter Packs] Checklist saved to ${file.path}`);
+          await this.app.workspace.getLeaf(true).openFile(file);
+        } catch (e) {
+          new Notice(`[Starter Packs] Couldn't save checklist: ${e instanceof Error ? e.message : e}`, 8000);
+        }
+      },
     });
 
     this.addSettingTab(new StarterPacksSettingTab(this.app, this));

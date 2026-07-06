@@ -11,26 +11,31 @@ function sanitize(name: string): string {
     name
       .replace(/[\\/:*?"<>|#^[\]]/g, " ")
       .replace(/\s+/g, " ")
-      .trim() || "Starter Pack"
+      .trim() || "Untitled"
   );
 }
 
-/** Write a pack out as a readable note (the markdown share form: every plugin
- * linked, plus the import link + code so the note is itself re-importable).
- * Never overwrites — on a name clash it picks the next free ` N` suffix, in
- * keeping with the plugin's archive-not-destroy stance. Returns the new file. */
-export async function exportPackAsNote(app: App, pack: StarterPack): Promise<TFile> {
+/** Create a note under the "Starter Packs" folder without ever overwriting: on
+ * a name clash it walks to the next free ` N` suffix, in keeping with the
+ * plugin's archive-not-destroy stance. Creates the folder if missing. */
+export async function writeUniqueNote(app: App, baseName: string, content: string): Promise<TFile> {
   const folder = normalizePath(FOLDER);
   if (!app.vault.getAbstractFileByPath(folder)) {
-    // Ignore an "already exists" race with another concurrent export.
+    // Ignore an "already exists" race with another concurrent write.
     await app.vault.createFolder(folder).catch(() => {});
   }
-  const base = sanitize(pack.name);
+  const base = sanitize(baseName);
   let path = normalizePath(`${folder}/${base}.md`);
   let n = 2;
   while (app.vault.getAbstractFileByPath(path)) {
     path = normalizePath(`${folder}/${base} ${n}.md`);
     n++;
   }
-  return app.vault.create(path, packToMarkdown(pack));
+  return app.vault.create(path, content);
+}
+
+/** Write a pack out as a readable note (the markdown share form: every plugin
+ * linked, plus the import link + code so the note is itself re-importable). */
+export async function exportPackAsNote(app: App, pack: StarterPack): Promise<TFile> {
+  return writeUniqueNote(app, pack.name, packToMarkdown(pack));
 }
