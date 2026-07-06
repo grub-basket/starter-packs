@@ -38,6 +38,19 @@ Author names on a pack are **informational, not verified** — there's no identi
 
 When you use **Save as mine** on a pack someone shared, it keeps the **original** author's name until you edit and save the pack — at which point it becomes yours. This is a deliberate trade-off: it preserves attribution by default, but it also means a pack you modify and re-share still carries the original author's name until you make it your own. There's no enforcement in either direction; it's on the good faith of whoever's sharing.
 
+## Limitations & security
+
+Starter Packs shares a **list of plugins and themes** — nothing else travels with a pack:
+
+- **No plugin settings.** Recipients get a fresh install with defaults (each plugin's `data.json` is not shared).
+- **No CSS snippets.** They have no community store to install from.
+- **No hotkeys, appearance/theme config, or other `.obsidian` contents.**
+- **Not-in-catalog items** (beta/BRAT plugins, private themes) are shown but flagged as not auto-installable.
+
+**Security:** community plugins run with full access to your vault, so only import packs from people you trust. Installed plugins are **disabled by default** — review, then *Enable all*. A pack itself can't run code; the risk is in the plugins it points to.
+
+**Want to replicate a whole vault** (settings, snippets, hotkeys)? Starter Packs deliberately doesn't — bundling settings can leak secrets (API keys/tokens in plugin `data.json`) and machine-specific paths, so the reliable route is to **zip your `.obsidian` folder yourself**. The plugin gives you a ready-made, offline **replication checklist** (Settings → *Save as note*, or the "Create a vault replication checklist note" command) that walks through it safely, including how to strip secrets first. (A dedicated vault-replication plugin may cover this end-to-end later; it's intentionally out of scope here.)
+
 ## Similar plugins
 
 The "install a list of plugins" idea isn't new — a few plugins touch this space:

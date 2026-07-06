@@ -42,10 +42,10 @@ The difference is *"here's a dump of everything I run"* vs. *"here's my **Academ
 - **Teams / onboarding** — "install the team's base pack" instead of a setup doc.
 - **Anyone helping a friend** get started, or replicating a focused workflow (writing, PKM, dev) without cloning a whole vault.
 
-## What it deliberately isn't (yet)
+## What it deliberately isn't
 
-- Not a full vault-replication tool (settings, themes, snippets) — that's what a zip or [obsidian-git](https://github.com/Vinzent03/obsidian-git) is for. Packs could *optionally* carry per-plugin settings later, but that ships secrets, so it needs an explicit opt-in and review step.
-- Not a directory / discovery feed — it's peer-to-peer sharing, not a hosted catalog.
+- **Not a full vault-replication tool** (settings, snippets, hotkeys, all of `.obsidian`). That's a separate concern — bundling settings ships secrets and machine-specific paths, so it belongs in its own plugin with a proper review/redaction flow. Starter Packs instead ships a **DIY replication checklist** (copy or save-as-note) that walks users through zipping `.obsidian` themselves and stripping secrets first. Themes are the exception that *does* belong here, because they install from a store just like plugins.
+- **Not a directory / discovery feed** — it's peer-to-peer sharing, not a hosted catalog.
 
 ## Interop opportunity
 
