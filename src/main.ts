@@ -32,17 +32,17 @@ export default class StarterPacksPlugin extends Plugin {
 
     this.addCommand({
       id: "manage-packs",
-      name: "Manage starter packs",
+      name: "Manage packs",
       callback: () => new ManagePacksModal(this.app, this).open(),
     });
     this.addCommand({
       id: "create-pack",
-      name: "Create a starter pack",
+      name: "Create a pack",
       callback: () => new PackEditModal(this.app, this, null).open(),
     });
     this.addCommand({
       id: "import-pack",
-      name: "Import a starter pack (paste link or code)",
+      name: "Import a pack (paste link or code)",
       callback: () => new ImportPackModal(this.app, this).open(),
     });
     this.addCommand({

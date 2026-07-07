@@ -447,13 +447,7 @@ export class ImportPackModal extends Modal {
     // Persistent toast so progress + completion still reach the user if they
     // close the modal mid-run. Updated in place each step.
     const notice = new Notice("", 0);
-    const setNotice = (msg: string) => {
-      try {
-        notice.setMessage(`[Starter Packs] ${msg}`);
-      } catch {
-        notice.messageEl?.setText(`[Starter Packs] ${msg}`);
-      }
-    };
+    const setNotice = (msg: string) => notice.setMessage(`[Starter Packs] ${msg}`);
 
     if (this.installAllBtn) {
       this.installAllBtn.disabled = true;

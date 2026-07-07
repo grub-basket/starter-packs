@@ -1,7 +1,7 @@
 import { App, Notice, PluginSettingTab, Setting } from "obsidian";
 import { copyToClipboard } from "./catalog";
 import { ManagePacksModal } from "./manager-modal";
-import { VAULT_REPLICATION_CHECKLIST, saveChecklistNote } from "./vault-checklist";
+import { saveChecklistNote, vaultReplicationChecklist } from "./vault-checklist";
 import type StarterPacksPlugin from "./main";
 
 export class StarterPacksSettingTab extends PluginSettingTab {
@@ -64,7 +64,8 @@ export class StarterPacksSettingTab extends PluginSettingTab {
    * checklist for everything Starter Packs deliberately leaves out. */
   private renderHelp(): void {
     const c = this.containerEl;
-    c.createEl("h3", { text: "Help & limitations" });
+    const configDir = this.app.vault.configDir;
+    new Setting(c).setName("Help & limitations").setHeading();
 
     const intro = c.createEl("p", { cls: "setting-item-description" });
     intro.setText(
@@ -77,7 +78,7 @@ export class StarterPacksSettingTab extends PluginSettingTab {
     [
       "Your plugin settings — each plugin's data.json. Recipients get a fresh install with defaults.",
       "CSS snippets — they have no community store to install from.",
-      "Hotkeys, appearance/theme configuration, core-plugin settings, or anything else in your .obsidian folder.",
+      `Hotkeys, appearance/theme configuration, core-plugin settings, or anything else in your ${configDir} folder.`,
       "Anything not published to a community catalog (beta/BRAT plugins, private themes) — shown but flagged as not auto-installable.",
     ].forEach((t) => ul.createEl("li", { text: t }));
 
@@ -93,11 +94,11 @@ export class StarterPacksSettingTab extends PluginSettingTab {
     new Setting(c)
       .setName("Replicating a whole vault (settings, snippets, hotkeys)")
       .setDesc(
-        "Starter Packs deliberately doesn't copy your config — bundling settings can leak secrets (API keys/tokens in plugin data.json) and machine-specific paths. To carry a full setup, zip your .obsidian folder yourself. This checklist walks you through it safely (offline)."
+        `Starter Packs deliberately doesn't copy your config — bundling settings can leak secrets (API keys/tokens in plugin data.json) and machine-specific paths. To carry a full setup, zip your ${configDir} folder yourself. This checklist walks you through it safely (offline).`
       )
       .addButton((b) =>
         b.setButtonText("Copy checklist").onClick(() => {
-          void copyToClipboard(VAULT_REPLICATION_CHECKLIST, "Vault replication checklist");
+          void copyToClipboard(vaultReplicationChecklist(configDir), "Vault replication checklist");
         })
       )
       .addButton((b) =>

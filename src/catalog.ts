@@ -30,7 +30,7 @@ export async function fetchCatalog(): Promise<Map<string, CatalogEntry>> {
     catalogCache = map;
     catalogFetchedAt = Date.now();
     return map;
-  } catch (e) {
+  } catch {
     // A stale catalog beats no catalog — only throw when we have nothing.
     if (catalogCache) return catalogCache;
     throw new Error("Couldn't load the community plugin catalog (offline or GitHub unavailable).");
@@ -98,7 +98,8 @@ export async function installPluginDirect(
       url: `https://api.github.com/repos/${entry.repo}/releases/latest`,
       headers: { Accept: "application/vnd.github+json" },
     });
-    tag = release.json?.tag_name;
+    const body = release.json as { tag_name?: string } | undefined;
+    tag = body?.tag_name;
   } catch {
     throw new Error(
       `Couldn't reach GitHub for ${entry.repo} (offline, or the API rate limit is exhausted — it resets within an hour).`

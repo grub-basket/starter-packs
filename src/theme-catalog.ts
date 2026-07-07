@@ -53,7 +53,7 @@ export async function fetchThemeCatalog(): Promise<Map<string, ThemeCatalogEntry
     themeCache = map;
     themeFetchedAt = Date.now();
     return map;
-  } catch (e) {
+  } catch {
     if (themeCache) return themeCache; // stale beats nothing
     throw new Error("Couldn't load the community theme catalog (offline or GitHub unavailable).");
   }

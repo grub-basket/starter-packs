@@ -95,7 +95,7 @@ export class PackEditModal extends Modal {
     const cancel = row.createEl("button", { text: "Cancel" });
     cancel.addEventListener("click", () => this.close());
     const save = row.createEl("button", { text: "Save pack", cls: "mod-cta" });
-    save.addEventListener("click", () => this.save());
+    save.addEventListener("click", () => void this.save());
   }
 
   /** Compact checklist of the community themes installed in this vault. A vault
