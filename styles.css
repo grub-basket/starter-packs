@@ -215,6 +215,18 @@
   margin-bottom: 0;
 }
 
+/* Pack description: stack the label above a full-width textarea. */
+.starter-packs-desc-setting {
+  display: block;
+}
+.starter-packs-desc-setting .setting-item-control {
+  padding-top: 6px;
+  width: 100%;
+}
+.starter-packs-desc-setting .setting-item-control textarea {
+  width: 100%;
+}
+
 /* Markdown export toggles (share modal) */
 .starter-packs-md-options {
   display: flex;

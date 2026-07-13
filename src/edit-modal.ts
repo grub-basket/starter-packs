@@ -53,12 +53,15 @@ export class PackEditModal extends Modal {
       .addText((t) =>
         t.setPlaceholder("e.g. Human").setValue(this.author).onChange((v) => (this.author = v))
       );
-    new Setting(this.contentEl).setName("Description").addTextArea((t) => {
-      t.setPlaceholder("Optional — what this pack is for")
-        .setValue(this.description)
-        .onChange((v) => (this.description = v));
-      t.inputEl.rows = 2;
-    });
+    new Setting(this.contentEl)
+      .setName("Description")
+      .setClass("starter-packs-desc-setting")
+      .addTextArea((t) => {
+        t.setPlaceholder("Optional — what this pack is for")
+          .setValue(this.description)
+          .onChange((v) => (this.description = v));
+        t.inputEl.rows = 2;
+      });
 
     // Plugin picker
     const pickerHeader = this.contentEl.createDiv({ cls: "starter-packs-picker-header" });
