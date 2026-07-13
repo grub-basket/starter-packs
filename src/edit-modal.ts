@@ -41,15 +41,19 @@ export class PackEditModal extends Modal {
     this.modalEl.addClass("starter-packs-modal");
     this.titleEl.setText(this.existing ? "Edit starter pack" : "New starter pack");
 
-    new Setting(this.contentEl).setName("Pack name").addText((t) =>
-      t
-        .setPlaceholder("e.g. Academic writing essentials")
-        .setValue(this.name)
-        .onChange((v) => (this.name = v))
-    );
+    new Setting(this.contentEl)
+      .setName("Pack name")
+      .setClass("starter-packs-halfwidth")
+      .addText((t) =>
+        t
+          .setPlaceholder("e.g. Academic writing essentials")
+          .setValue(this.name)
+          .onChange((v) => (this.name = v))
+      );
     new Setting(this.contentEl)
       .setName("Your name")
       .setDesc("Shown to whoever imports the pack.")
+      .setClass("starter-packs-halfwidth")
       .addText((t) =>
         t.setPlaceholder("e.g. Human").setValue(this.author).onChange((v) => (this.author = v))
       );
@@ -200,9 +204,10 @@ export class PackEditModal extends Modal {
     return (this.app as unknown as { plugins: { enabledPlugins: Set<string> } }).plugins.enabledPlugins.has(id);
   }
 
-  /** One card per selected plugin: enable toggle (default = its state in this
-   * vault), an optional comment, and an optional description. Handlers mutate
-   * the selected entry in place, so typing never triggers a re-render (focus is
+  /** One card per selected plugin: the plugin's manifest description (read-only,
+   * for context), an enable toggle (default = its state in this vault), and one
+   * optional author note. Handlers mutate the selected entry in place, so typing
+   * never triggers a re-render (focus is
    * kept); the section only re-renders when the selection set changes. */
   private renderSelected(): void {
     const el = this.selectedEl;
@@ -213,7 +218,7 @@ export class PackEditModal extends Modal {
     el.createEl("h4", { text: "Annotate selected plugins" });
     el.createDiv({
       cls: "starter-packs-picker-hint",
-      text: "Optional note + description per plugin, and whether you keep it enabled (shown to whoever imports the pack).",
+      text: "Add an optional note per plugin, and set whether you keep it enabled (both shown to whoever imports the pack). The plugin's own description comes from its manifest.",
     });
 
     const manifests = (this.app as unknown as { plugins: { manifests: Record<string, PluginManifest> } })

@@ -214,6 +214,18 @@
   width: 100%;
   margin-bottom: 0;
 }
+/* Breathing room between the read-only manifest description and the note box. */
+.starter-packs-annotate-row .starter-packs-plugin-desc {
+  margin: 4px 0 10px;
+}
+
+/* Pack name / your name: control (and its input) take ~half the modal width. */
+.starter-packs-halfwidth .setting-item-control {
+  flex: 0 0 50%;
+}
+.starter-packs-halfwidth .setting-item-control input {
+  width: 100%;
+}
 
 /* Pack description: stack the label above a full-width textarea. */
 .starter-packs-desc-setting {
