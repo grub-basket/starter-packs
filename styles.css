@@ -4,6 +4,38 @@
   width: min(640px, 90vw);
 }
 
+/* Pack editor: pinned header + footer, single scrolling body. Keeps the big
+ * outer modal scrollbar (which crowded the close button) from appearing —
+ * there's just one scrollbar, on the body. */
+.starter-packs-edit-modal .modal-content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: min(80vh, 760px);
+}
+.starter-packs-edit-header {
+  flex: 0 0 auto;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+.starter-packs-edit-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 10px 4px 0;
+}
+/* Inside the scrolling body the lists flow (no inner scrollbar) so the body is
+ * the single scroll region. */
+.starter-packs-edit-body .starter-packs-plugin-list {
+  max-height: none;
+  overflow: visible;
+}
+.starter-packs-edit-footer {
+  flex: 0 0 auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
 /* Always-visible scrollbars: while a Starter Packs modal is open the plugin
  * toggles Obsidian's own `body.styled-scrollbars` mode (see src/scrollbars.ts).
  * Per-element CSS can't force this on macOS overlay-scrollbar setups — the

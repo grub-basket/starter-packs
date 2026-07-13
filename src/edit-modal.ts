@@ -41,9 +41,12 @@ export class PackEditModal extends Modal {
   onOpen(): void {
     acquireStyledScrollbars();
     this.modalEl.addClass("starter-packs-modal");
+    this.modalEl.addClass("starter-packs-edit-modal");
     this.titleEl.setText(this.existing ? "Edit starter pack" : "New starter pack");
 
-    new Setting(this.contentEl)
+    // Pinned header (name / your name / description) — doesn't scroll.
+    const header = this.contentEl.createDiv({ cls: "starter-packs-edit-header" });
+    new Setting(header)
       .setName("Pack name")
       .setClass("starter-packs-halfwidth")
       .addText((t) =>
@@ -52,14 +55,14 @@ export class PackEditModal extends Modal {
           .setValue(this.name)
           .onChange((v) => (this.name = v))
       );
-    new Setting(this.contentEl)
+    new Setting(header)
       .setName("Your name")
       .setDesc("Shown to whoever imports the pack.")
       .setClass("starter-packs-halfwidth")
       .addText((t) =>
         t.setPlaceholder("e.g. Human").setValue(this.author).onChange((v) => (this.author = v))
       );
-    new Setting(this.contentEl)
+    new Setting(header)
       .setName("Description")
       .setClass("starter-packs-desc-setting")
       .addTextArea((t) => {
@@ -69,12 +72,17 @@ export class PackEditModal extends Modal {
         t.inputEl.rows = 2;
       });
 
+    // Scrolling body: the plugin picker, annotations, and themes. This is the
+    // only scroll region, so the modal shows one scrollbar here instead of a
+    // big outer one that crowds the close button.
+    const body = this.contentEl.createDiv({ cls: "starter-packs-edit-body" });
+
     // Plugin picker
-    const pickerHeader = this.contentEl.createDiv({ cls: "starter-packs-picker-header" });
+    const pickerHeader = body.createDiv({ cls: "starter-packs-picker-header" });
     pickerHeader.createEl("h3", { text: "Plugins in this vault" });
     this.countEl = pickerHeader.createSpan({ cls: "starter-packs-count" });
 
-    const controls = this.contentEl.createDiv({ cls: "starter-packs-picker-controls" });
+    const controls = body.createDiv({ cls: "starter-packs-picker-controls" });
     const searchInput = controls.createEl("input", {
       type: "search",
       placeholder: "Filter plugins…",
@@ -104,17 +112,18 @@ export class PackEditModal extends Modal {
       this.renderSelected();
     });
 
-    this.listEl = this.contentEl.createDiv({ cls: "starter-packs-plugin-list" });
+    this.listEl = body.createDiv({ cls: "starter-packs-plugin-list" });
     this.renderList();
 
     // Per-plugin annotations (comment / description / enable flag) for the
     // plugins currently ticked above.
-    this.selectedEl = this.contentEl.createDiv({ cls: "starter-packs-annotate" });
+    this.selectedEl = body.createDiv({ cls: "starter-packs-annotate" });
     this.renderSelected();
 
-    this.renderThemePicker();
+    this.renderThemePicker(body);
 
-    const row = this.contentEl.createDiv({ cls: "starter-packs-button-row" });
+    // Pinned footer (buttons) — doesn't scroll.
+    const row = this.contentEl.createDiv({ cls: "starter-packs-button-row starter-packs-edit-footer" });
     const cancel = row.createEl("button", { text: "Cancel" });
     cancel.addEventListener("click", () => this.close());
     const save = row.createEl("button", { text: "Save pack", cls: "mod-cta" });
@@ -123,18 +132,18 @@ export class PackEditModal extends Modal {
 
   /** Compact checklist of the community themes installed in this vault. A vault
    * usually has only a handful, so no search is needed. */
-  private renderThemePicker(): void {
+  private renderThemePicker(host: HTMLElement): void {
     const themes = installedThemes(this.app);
-    const header = this.contentEl.createDiv({ cls: "starter-packs-picker-header" });
+    const header = host.createDiv({ cls: "starter-packs-picker-header" });
     header.createEl("h3", { text: "Themes in this vault" });
     if (!themes.length) {
-      this.contentEl.createDiv({
+      host.createDiv({
         cls: "starter-packs-empty",
         text: "No community themes installed — install one from Appearance to include it.",
       });
       return;
     }
-    const list = this.contentEl.createDiv({ cls: "starter-packs-plugin-list starter-packs-theme-list" });
+    const list = host.createDiv({ cls: "starter-packs-plugin-list starter-packs-theme-list" });
     for (const t of themes) {
       const row = list.createDiv({ cls: "starter-packs-plugin-row" });
       const cb = row.createEl("input", { type: "checkbox" });
