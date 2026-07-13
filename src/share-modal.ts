@@ -62,10 +62,13 @@ export class SharePackModal extends Modal {
     ta.readOnly = true;
     ta.addEventListener("focus", () => ta.select());
 
+    const manifests = (this.app as unknown as { plugins: { manifests: Record<string, { description?: string }> } })
+      .plugins.manifests;
     const regen = () => {
       ta.value = packToMarkdown(this.pack, {
         headings: headingsCb.checked,
         descriptions: descCb.checked,
+        describe: (id) => manifests[id]?.description,
       });
     };
     headingsCb.addEventListener("change", regen);

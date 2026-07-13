@@ -38,27 +38,23 @@ export function packToPayload(pack: StarterPack): PackPayloadV1 {
   return payload;
 }
 
-/** [id, name, author, comment?, description?, enabled?] with trailing defaults
- * trimmed — a plain enabled plugin with no notes stays a 3-element tuple, so
- * simple packs are byte-identical to the pre-comment format. */
+/** [id, name, author, comment?, enabled?] with trailing defaults trimmed — a
+ * plain enabled plugin with no comment stays a 3-element tuple, so simple packs
+ * are byte-identical to the pre-comment format. */
 function pluginToTuple(p: PackPlugin): PluginTuple {
   const enabledFlag: 0 | 1 = p.enabled === false ? 0 : 1; // default true
-  const full: [string, string, string, string, string, 0 | 1] = [
+  const full: [string, string, string, string, 0 | 1] = [
     p.id,
     p.name,
     p.author,
     p.comment ?? "",
-    p.description ?? "",
     enabledFlag,
   ];
-  // Drop trailing elements equal to their default (enabled=1, comment/desc="").
-  let end = 6;
-  if (full[5] === 1) {
-    end = 5;
-    if (full[4] === "") {
-      end = 4;
-      if (full[3] === "") end = 3;
-    }
+  // Drop trailing elements equal to their default (enabled=1, comment="").
+  let end = 5;
+  if (full[4] === 1) {
+    end = 4;
+    if (full[3] === "") end = 3;
   }
   return full.slice(0, end) as PluginTuple;
 }
@@ -140,8 +136,7 @@ export function payloadToPack(payload: PackPayloadV1): StarterPack {
         author: cap(typeof e[2] === "string" ? e[2] : "", 200),
       };
       if (typeof e[3] === "string" && e[3]) plugin.comment = cap(e[3], 500);
-      if (typeof e[4] === "string" && e[4]) plugin.description = cap(e[4], 2000);
-      if (e[5] === 0) plugin.enabled = false; // absent / 1 => enabled (default)
+      if (e[4] === 0) plugin.enabled = false; // absent / 1 => enabled (default)
       return plugin;
     });
   const themes = (Array.isArray(payload.t) ? payload.t : [])
@@ -170,14 +165,18 @@ export function randomId(): string {
 export interface MarkdownOptions {
   /** Render each plugin name as a `###` heading instead of a bullet. */
   headings?: boolean;
-  /** Include the author's per-plugin comment + description. */
+  /** Include the author's per-plugin comment + the plugin's own description. */
   descriptions?: boolean;
+  /** Resolves a plugin's description (from its manifest / the catalog) — the
+   * description isn't stored in the pack. Omit for no descriptions. */
+  describe?: (id: string) => string | undefined;
 }
 
 /** A human-readable markdown rendering of a pack, for forum/gist sharing. */
 export function packToMarkdown(pack: StarterPack, opts: MarkdownOptions = {}): string {
   const headings = opts.headings ?? true;
   const descriptions = opts.descriptions ?? true;
+  const describe = opts.describe ?? (() => undefined);
   const lines: string[] = [];
   lines.push(`## ${pack.name}`);
   const by = pack.author ? ` by ${pack.author}` : "";
@@ -193,18 +192,19 @@ export function packToMarkdown(pack: StarterPack, opts: MarkdownOptions = {}): s
     const link = `obsidian://show-plugin?id=${encodeURIComponent(p.id)}`;
     const author = p.author ? ` — ${p.author}` : "";
     const disabledNote = p.enabled === false ? " _(the author keeps this off)_" : "";
+    const desc = descriptions ? describe(p.id) : undefined;
     if (headings) {
       lines.push(`### [${p.name}](${link})${author}${disabledNote}`);
       if (descriptions) {
         if (p.comment) lines.push(`> ${p.comment}`);
-        if (p.description) lines.push(p.description);
+        if (desc) lines.push(desc);
       }
       lines.push("");
     } else {
       lines.push(`- [${p.name}](${link})${author}${disabledNote}`);
       if (descriptions) {
         if (p.comment) lines.push(`  - _${p.comment}_`);
-        if (p.description) lines.push(`  - ${p.description}`);
+        if (desc) lines.push(`  - ${desc}`);
       }
     }
   }

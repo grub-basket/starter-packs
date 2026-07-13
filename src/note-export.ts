@@ -35,7 +35,11 @@ export async function writeUniqueNote(app: App, baseName: string, content: strin
 }
 
 /** Write a pack out as a readable note (the markdown share form: every plugin
- * linked, plus the import link + code so the note is itself re-importable). */
+ * linked, plus the import link + code so the note is itself re-importable).
+ * Plugin descriptions are pulled from the local manifests. */
 export async function exportPackAsNote(app: App, pack: StarterPack): Promise<TFile> {
-  return writeUniqueNote(app, pack.name, packToMarkdown(pack));
+  const manifests = (app as unknown as { plugins: { manifests: Record<string, { description?: string }> } })
+    .plugins.manifests;
+  const markdown = packToMarkdown(pack, { describe: (id) => manifests[id]?.description });
+  return writeUniqueNote(app, pack.name, markdown);
 }

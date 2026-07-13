@@ -4,10 +4,10 @@ export interface PackPlugin {
   id: string;
   name: string;
   author: string;
-  /** Optional author-written note, shown between the name and description. */
+  /** Optional author-written note about this specific plugin (per plugin). The
+   * plugin's own name/description come from its manifest.json (or the community
+   * catalog), so this is the ONE thing the author adds. */
   comment?: string;
-  /** Optional author-written description of the plugin / why it's in the pack. */
-  description?: string;
   /** The author's enable intent — defaults to whether the plugin was enabled in
    * their vault when the pack was made, and can be overridden per plugin. This
    * is RECORD-ONLY on import: recipients still install disabled by default (see
@@ -82,10 +82,11 @@ export interface PackPayloadV1 {
   a: string; // pack author
   d?: string; // description
   /** Plugin entries. Positional + additive: [id, name, author, comment?,
-   * description?, enabled?]. Trailing defaults (empty comment/description,
-   * enabled=1) are trimmed so a plain plugin stays [id, name, author] — old
-   * decoders keep reading the first three and ignore the rest. `enabled` is
-   * 1|0; absent means 1 (enabled). */
+   * enabled?]. Trailing defaults (empty comment, enabled=1) are trimmed so a
+   * plain plugin stays [id, name, author] — old decoders keep reading the first
+   * three and ignore the rest. `enabled` is 1|0; absent means 1 (enabled). The
+   * plugin's description is NOT carried — it's read live from the manifest /
+   * community catalog. */
   p: PluginTuple[];
   t?: [string, string][]; // themes [name, author]
 }
@@ -93,5 +94,4 @@ export interface PackPayloadV1 {
 export type PluginTuple =
   | [string, string, string]
   | [string, string, string, string]
-  | [string, string, string, string, string]
-  | [string, string, string, string, string, 0 | 1];
+  | [string, string, string, string, 0 | 1];

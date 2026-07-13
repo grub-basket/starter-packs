@@ -217,7 +217,9 @@ export class ImportPackModal extends Modal {
         cls: "starter-packs-plugin-meta",
       });
       if (p.comment) label.createDiv({ text: p.comment, cls: "starter-packs-plugin-comment" });
-      if (p.description) label.createDiv({ text: p.description, cls: "starter-packs-plugin-desc" });
+      // Description isn't carried in the pack — read it from the catalog.
+      const catDesc = this.catalog?.get(p.id)?.description;
+      if (catDesc) label.createDiv({ text: catDesc, cls: "starter-packs-plugin-desc" });
 
       const status = pluginStatus(this.app, p.id);
       const inCatalog = this.catalog ? this.catalog.has(p.id) : null;

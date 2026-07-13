@@ -210,13 +210,8 @@
   font-size: var(--font-ui-smaller);
   flex-shrink: 0;
 }
-.starter-packs-annotate-comment,
-.starter-packs-annotate-desc {
+.starter-packs-annotate-comment {
   width: 100%;
-  margin-bottom: 6px;
-}
-.starter-packs-annotate-desc {
-  resize: vertical;
   margin-bottom: 0;
 }
 

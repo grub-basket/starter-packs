@@ -213,6 +213,8 @@ export class PackEditModal extends Modal {
       text: "Optional note + description per plugin, and whether you keep it enabled (shown to whoever imports the pack).",
     });
 
+    const manifests = (this.app as unknown as { plugins: { manifests: Record<string, PluginManifest> } })
+      .plugins.manifests;
     for (const p of selected) {
       const card = el.createDiv({ cls: "starter-packs-annotate-row" });
       const head = card.createDiv({ cls: "starter-packs-annotate-head" });
@@ -226,22 +228,22 @@ export class PackEditModal extends Modal {
         p.enabled = tcb.checked;
       });
 
+      // The plugin's own description comes from its manifest — shown read-only
+      // for context, not stored in the pack.
+      const manifestDesc = manifests[p.id]?.description;
+      if (manifestDesc) {
+        card.createDiv({ cls: "starter-packs-plugin-desc", text: manifestDesc });
+      }
+
+      // The one thing the author writes: a per-plugin note.
       const comment = card.createEl("input", {
         type: "text",
         cls: "starter-packs-annotate-comment",
       });
-      comment.placeholder = "Comment (optional)";
+      comment.placeholder = "Your note about this plugin (optional)";
       comment.value = p.comment ?? "";
       comment.addEventListener("input", () => {
         p.comment = comment.value;
-      });
-
-      const desc = card.createEl("textarea", { cls: "starter-packs-annotate-desc" });
-      desc.placeholder = "Description (optional)";
-      desc.value = p.description ?? "";
-      desc.rows = 2;
-      desc.addEventListener("input", () => {
-        p.description = desc.value;
       });
     }
   }
@@ -268,9 +270,7 @@ export class PackEditModal extends Modal {
       .map((p) => {
         const out: PackPlugin = { id: p.id, name: p.name, author: p.author };
         const comment = (p.comment ?? "").trim();
-        const description = (p.description ?? "").trim();
         if (comment) out.comment = comment;
-        if (description) out.description = description;
         if (p.enabled === false) out.enabled = false; // true is the default → omit
         return out;
       })
