@@ -7,11 +7,17 @@
 /* Pack editor: pinned header + footer, single scrolling body. Keeps the big
  * outer modal scrollbar (which crowded the close button) from appearing —
  * there's just one scrollbar, on the body. */
+/* Lift Obsidian's own modal cap so the taller editor can actually use it. */
+.starter-packs-modal.starter-packs-edit-modal {
+  max-height: min(90vh, 1000px);
+}
 .starter-packs-edit-modal .modal-content {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  max-height: min(80vh, 760px);
+  /* Grow up to a generous cap so a full plugin list shows plenty before
+   * scrolling, but stay compact when there's little content. */
+  max-height: min(88vh, 980px);
 }
 .starter-packs-edit-header {
   flex: 0 0 auto;
