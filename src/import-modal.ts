@@ -11,6 +11,7 @@ import {
 } from "./catalog";
 import { confirm } from "./confirm-modal";
 import { decodePackInput } from "./encoding";
+import { acquireStyledScrollbars, releaseStyledScrollbars } from "./scrollbars";
 import {
   ThemeCatalogEntry,
   applyTheme,
@@ -57,6 +58,7 @@ export class ImportPackModal extends Modal {
   }
 
   onOpen(): void {
+    acquireStyledScrollbars();
     this.modalEl.addClass("starter-packs-modal");
     if (this.pack) {
       if (this.recordOnOpen) this.recordImport();
@@ -519,6 +521,7 @@ export class ImportPackModal extends Modal {
   }
 
   onClose(): void {
+    releaseStyledScrollbars();
     this.contentEl.empty();
   }
 }

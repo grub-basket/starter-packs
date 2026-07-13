@@ -2,6 +2,7 @@ import { App, Modal, Notice } from "obsidian";
 import { copyToClipboard } from "./catalog";
 import { packToCode, packToLink, packToMarkdown } from "./encoding";
 import { exportPackAsNote } from "./note-export";
+import { acquireStyledScrollbars, releaseStyledScrollbars } from "./scrollbars";
 import { StarterPack } from "./types";
 
 /** Share surface for one pack: link, code, and markdown forms, each with a
@@ -12,6 +13,7 @@ export class SharePackModal extends Modal {
   }
 
   onOpen(): void {
+    acquireStyledScrollbars();
     this.modalEl.addClass("starter-packs-modal");
     this.titleEl.setText(`Share "${this.pack.name}"`);
 
@@ -112,6 +114,7 @@ export class SharePackModal extends Modal {
   }
 
   onClose(): void {
+    releaseStyledScrollbars();
     this.contentEl.empty();
   }
 }

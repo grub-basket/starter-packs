@@ -4,6 +4,7 @@ import { PackEditModal } from "./edit-modal";
 import { ImportPackModal } from "./import-modal";
 import { ManagePacksModal } from "./manager-modal";
 import { StarterPacksSettingTab } from "./settings-tab";
+import { resetStyledScrollbars } from "./scrollbars";
 import { saveChecklistNote } from "./vault-checklist";
 import { DEFAULT_SETTINGS, StarterPacksSettings } from "./types";
 
@@ -60,6 +61,12 @@ export default class StarterPacksPlugin extends Plugin {
     });
 
     this.addSettingTab(new StarterPacksSettingTab(this.app, this));
+  }
+
+  onunload(): void {
+    // Don't leave the always-visible-scrollbars class on if we're unloaded
+    // while a modal is (somehow) still open.
+    resetStyledScrollbars();
   }
 
   async loadSettings(): Promise<void> {

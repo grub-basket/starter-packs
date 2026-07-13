@@ -1,5 +1,6 @@
 import { App, Modal, Notice, PluginManifest, Setting } from "obsidian";
 import { randomId } from "./encoding";
+import { acquireStyledScrollbars, releaseStyledScrollbars } from "./scrollbars";
 import { installedThemes } from "./theme-catalog";
 import { PackPlugin, PackTheme, StarterPack } from "./types";
 import type StarterPacksPlugin from "./main";
@@ -38,6 +39,7 @@ export class PackEditModal extends Modal {
   }
 
   onOpen(): void {
+    acquireStyledScrollbars();
     this.modalEl.addClass("starter-packs-modal");
     this.titleEl.setText(this.existing ? "Edit starter pack" : "New starter pack");
 
@@ -316,6 +318,7 @@ export class PackEditModal extends Modal {
   }
 
   onClose(): void {
+    releaseStyledScrollbars();
     this.contentEl.empty();
   }
 }

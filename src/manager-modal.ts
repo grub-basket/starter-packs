@@ -3,6 +3,7 @@ import { confirm } from "./confirm-modal";
 import { PackEditModal } from "./edit-modal";
 import { randomId } from "./encoding";
 import { ImportPackModal } from "./import-modal";
+import { acquireStyledScrollbars, releaseStyledScrollbars } from "./scrollbars";
 import { SharePackModal } from "./share-modal";
 import { StarterPack } from "./types";
 import type StarterPacksPlugin from "./main";
@@ -28,6 +29,7 @@ export class ManagePacksModal extends Modal {
   }
 
   onOpen(): void {
+    acquireStyledScrollbars();
     this.modalEl.addClass("starter-packs-modal");
     this.render();
   }
@@ -176,6 +178,7 @@ export class ManagePacksModal extends Modal {
   }
 
   onClose(): void {
+    releaseStyledScrollbars();
     this.contentEl.empty();
   }
 }

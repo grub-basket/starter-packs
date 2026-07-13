@@ -1,4 +1,5 @@
 import { App, Modal } from "obsidian";
+import { acquireStyledScrollbars, releaseStyledScrollbars } from "./scrollbars";
 
 /** Minimal promise-based confirm dialog. */
 export class ConfirmModal extends Modal {
@@ -15,6 +16,7 @@ export class ConfirmModal extends Modal {
   }
 
   onOpen(): void {
+    acquireStyledScrollbars();
     this.titleEl.setText(this.title);
     this.contentEl.createEl("p", { text: this.body });
     const row = this.contentEl.createDiv({ cls: "starter-packs-button-row" });
@@ -29,6 +31,7 @@ export class ConfirmModal extends Modal {
   }
 
   onClose(): void {
+    releaseStyledScrollbars();
     if (!this.resolved) this.onResult(false);
     this.contentEl.empty();
   }
