@@ -14,6 +14,7 @@ export class PackEditModal extends Modal {
   private selectedThemes: Map<string, PackTheme>;
   private search = "";
   private listEl!: HTMLElement;
+  private selectedEl!: HTMLElement;
   private countEl!: HTMLElement;
 
   constructor(
@@ -76,18 +77,31 @@ export class PackEditModal extends Modal {
     const selVisible = controls.createEl("button", { text: "Select visible" });
     selVisible.addEventListener("click", () => {
       for (const m of this.visibleManifests()) {
-        this.selected.set(m.id, { id: m.id, name: m.name, author: m.author ?? "" });
+        if (this.selected.has(m.id)) continue; // keep existing annotations
+        this.selected.set(m.id, {
+          id: m.id,
+          name: m.name,
+          author: m.author ?? "",
+          enabled: this.isEnabledInVault(m.id),
+        });
       }
       this.renderList();
+      this.renderSelected();
     });
     const clearBtn = controls.createEl("button", { text: "Clear selection" });
     clearBtn.addEventListener("click", () => {
       this.selected.clear();
       this.renderList();
+      this.renderSelected();
     });
 
     this.listEl = this.contentEl.createDiv({ cls: "starter-packs-plugin-list" });
     this.renderList();
+
+    // Per-plugin annotations (comment / description / enable flag) for the
+    // plugins currently ticked above.
+    this.selectedEl = this.contentEl.createDiv({ cls: "starter-packs-annotate" });
+    this.renderSelected();
 
     this.renderThemePicker();
 
@@ -151,9 +165,19 @@ export class PackEditModal extends Modal {
       const cb = row.createEl("input", { type: "checkbox" });
       cb.checked = this.selected.has(m.id);
       cb.addEventListener("change", () => {
-        if (cb.checked) this.selected.set(m.id, { id: m.id, name: m.name, author: m.author ?? "" });
-        else this.selected.delete(m.id);
+        if (cb.checked) {
+          // enabled defaults to the plugin's current state in this vault.
+          this.selected.set(m.id, {
+            id: m.id,
+            name: m.name,
+            author: m.author ?? "",
+            enabled: this.isEnabledInVault(m.id),
+          });
+        } else {
+          this.selected.delete(m.id);
+        }
         this.updateCount();
+        this.renderSelected();
       });
       const label = row.createDiv({ cls: "starter-packs-plugin-label" });
       label.createDiv({ text: m.name, cls: "starter-packs-plugin-name" });
@@ -167,6 +191,59 @@ export class PackEditModal extends Modal {
       });
     }
     this.updateCount();
+  }
+
+  private isEnabledInVault(id: string): boolean {
+    return (this.app as unknown as { plugins: { enabledPlugins: Set<string> } }).plugins.enabledPlugins.has(id);
+  }
+
+  /** One card per selected plugin: enable toggle (default = its state in this
+   * vault), an optional comment, and an optional description. Handlers mutate
+   * the selected entry in place, so typing never triggers a re-render (focus is
+   * kept); the section only re-renders when the selection set changes. */
+  private renderSelected(): void {
+    const el = this.selectedEl;
+    el.empty();
+    const selected = [...this.selected.values()].sort((a, b) => a.name.localeCompare(b.name));
+    if (!selected.length) return;
+
+    el.createEl("h4", { text: "Annotate selected plugins" });
+    el.createDiv({
+      cls: "starter-packs-picker-hint",
+      text: "Optional note + description per plugin, and whether you keep it enabled (shown to whoever imports the pack).",
+    });
+
+    for (const p of selected) {
+      const card = el.createDiv({ cls: "starter-packs-annotate-row" });
+      const head = card.createDiv({ cls: "starter-packs-annotate-head" });
+      head.createSpan({ text: p.name, cls: "starter-packs-plugin-name" });
+
+      const toggle = head.createEl("label", { cls: "starter-packs-annotate-toggle" });
+      const tcb = toggle.createEl("input", { type: "checkbox" });
+      tcb.checked = p.enabled !== false;
+      toggle.createSpan({ text: "enabled" });
+      tcb.addEventListener("change", () => {
+        p.enabled = tcb.checked;
+      });
+
+      const comment = card.createEl("input", {
+        type: "text",
+        cls: "starter-packs-annotate-comment",
+      });
+      comment.placeholder = "Comment (optional)";
+      comment.value = p.comment ?? "";
+      comment.addEventListener("input", () => {
+        p.comment = comment.value;
+      });
+
+      const desc = card.createEl("textarea", { cls: "starter-packs-annotate-desc" });
+      desc.placeholder = "Description (optional)";
+      desc.value = p.description ?? "";
+      desc.rows = 2;
+      desc.addEventListener("input", () => {
+        p.description = desc.value;
+      });
+    }
   }
 
   private updateCount(): void {
@@ -184,8 +261,20 @@ export class PackEditModal extends Modal {
       return;
     }
     const now = new Date().toISOString();
-    // Keep list order stable/alphabetical by name for a tidy share preview.
-    const plugins = [...this.selected.values()].sort((a, b) => a.name.localeCompare(b.name));
+    // Keep list order stable/alphabetical by name for a tidy share preview, and
+    // normalise annotations (trim; drop empty comment/description so data.json
+    // and the payload stay lean).
+    const plugins = [...this.selected.values()]
+      .map((p) => {
+        const out: PackPlugin = { id: p.id, name: p.name, author: p.author };
+        const comment = (p.comment ?? "").trim();
+        const description = (p.description ?? "").trim();
+        if (comment) out.comment = comment;
+        if (description) out.description = description;
+        if (p.enabled === false) out.enabled = false; // true is the default → omit
+        return out;
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
     const themes = [...this.selectedThemes.values()].sort((a, b) => a.name.localeCompare(b.name));
     let pack: StarterPack;
     if (this.existing) {

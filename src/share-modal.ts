@@ -39,13 +39,48 @@ export class SharePackModal extends Modal {
       packToCode(this.pack),
       "Code"
     );
-    this.section(
-      "Markdown",
-      "A readable list for forums/notes: every plugin linked, with the import link and code included.",
-      packToMarkdown(this.pack),
-      "Markdown",
-      6
-    );
+    this.markdownSection();
+  }
+
+  /** The markdown form, with live toggles for headings and descriptions. */
+  private markdownSection(): void {
+    const wrap = this.contentEl.createDiv({ cls: "starter-packs-share-section" });
+    const head = wrap.createDiv({ cls: "starter-packs-share-head" });
+    head.createEl("h3", { text: "Markdown" });
+    const copyBtn = head.createEl("button", { text: "Copy markdown", cls: "mod-cta" });
+    wrap.createDiv({
+      cls: "starter-packs-share-desc",
+      text: "A readable list for forums/notes, with the import link and code included.",
+    });
+
+    const opts = wrap.createDiv({ cls: "starter-packs-md-options" });
+    const headingsCb = this.optionToggle(opts, "Plugin names as headings", true);
+    const descCb = this.optionToggle(opts, "Include comments & descriptions", true);
+
+    const ta = wrap.createEl("textarea", { cls: "starter-packs-share-value" });
+    ta.rows = 8;
+    ta.readOnly = true;
+    ta.addEventListener("focus", () => ta.select());
+
+    const regen = () => {
+      ta.value = packToMarkdown(this.pack, {
+        headings: headingsCb.checked,
+        descriptions: descCb.checked,
+      });
+    };
+    headingsCb.addEventListener("change", regen);
+    descCb.addEventListener("change", regen);
+    regen();
+
+    copyBtn.addEventListener("click", () => void copyToClipboard(ta.value, "Markdown"));
+  }
+
+  private optionToggle(host: HTMLElement, text: string, checked: boolean): HTMLInputElement {
+    const label = host.createEl("label", { cls: "starter-packs-md-option" });
+    const cb = label.createEl("input", { type: "checkbox" });
+    cb.checked = checked;
+    label.createSpan({ text });
+    return cb;
   }
 
   private section(title: string, desc: string, value: string, label: string, rows = 2): void {

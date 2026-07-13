@@ -1,4 +1,4 @@
-import { PackPayloadV1, StarterPack } from "./types";
+import { PackPayloadV1, PackPlugin, PluginTuple, StarterPack } from "./types";
 
 /** Prefix for the paste-able code form ("Obsidian Starter Pack v1"). */
 export const CODE_PREFIX = "OSP1:";
@@ -29,13 +29,38 @@ export function packToPayload(pack: StarterPack): PackPayloadV1 {
     v: 1,
     n: pack.name,
     a: pack.author,
-    p: pack.plugins.map((p) => [p.id, p.name, p.author]),
+    p: pack.plugins.map((p) => pluginToTuple(p)),
   };
   if (pack.description) payload.d = pack.description;
   // Only emit `t` when there are themes, so plugin-only packs stay byte-identical
   // to the pre-theme format (shorter links, no needless churn).
   if (pack.themes.length) payload.t = pack.themes.map((t) => [t.name, t.author]);
   return payload;
+}
+
+/** [id, name, author, comment?, description?, enabled?] with trailing defaults
+ * trimmed — a plain enabled plugin with no notes stays a 3-element tuple, so
+ * simple packs are byte-identical to the pre-comment format. */
+function pluginToTuple(p: PackPlugin): PluginTuple {
+  const enabledFlag: 0 | 1 = p.enabled === false ? 0 : 1; // default true
+  const full: [string, string, string, string, string, 0 | 1] = [
+    p.id,
+    p.name,
+    p.author,
+    p.comment ?? "",
+    p.description ?? "",
+    enabledFlag,
+  ];
+  // Drop trailing elements equal to their default (enabled=1, comment/desc="").
+  let end = 6;
+  if (full[5] === 1) {
+    end = 5;
+    if (full[4] === "") {
+      end = 4;
+      if (full[3] === "") end = 3;
+    }
+  }
+  return full.slice(0, end) as PluginTuple;
 }
 
 export function encodePack(pack: StarterPack): string {
@@ -102,14 +127,23 @@ export function payloadToPack(payload: PackPayloadV1): StarterPack {
   const now = new Date().toISOString();
   // Caps keep a hostile/garbled payload from flooding the UI or data.json.
   const cap = (s: string, n: number) => (s.length > n ? s.slice(0, n) + "…" : s);
-  const plugins = payload.p
+  const plugins: PackPlugin[] = payload.p
     .slice(0, 500)
     .filter((e) => Array.isArray(e) && typeof e[0] === "string" && e[0].length > 0)
-    .map((e) => ({
-      id: cap(String(e[0]), 200),
-      name: cap(typeof e[1] === "string" && e[1] ? e[1] : String(e[0]), 200),
-      author: cap(typeof e[2] === "string" ? e[2] : "", 200),
-    }));
+    .map((entry) => {
+      // Loose view so we can read the optional trailing positions regardless of
+      // this tuple's actual length.
+      const e = entry as ReadonlyArray<string | number | undefined>;
+      const plugin: PackPlugin = {
+        id: cap(String(e[0]), 200),
+        name: cap(typeof e[1] === "string" && e[1] ? e[1] : String(e[0]), 200),
+        author: cap(typeof e[2] === "string" ? e[2] : "", 200),
+      };
+      if (typeof e[3] === "string" && e[3]) plugin.comment = cap(e[3], 500);
+      if (typeof e[4] === "string" && e[4]) plugin.description = cap(e[4], 2000);
+      if (e[5] === 0) plugin.enabled = false; // absent / 1 => enabled (default)
+      return plugin;
+    });
   const themes = (Array.isArray(payload.t) ? payload.t : [])
     .slice(0, 100)
     .filter((e) => Array.isArray(e) && typeof e[0] === "string" && e[0].length > 0)
@@ -133,8 +167,17 @@ export function randomId(): string {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 }
 
+export interface MarkdownOptions {
+  /** Render each plugin name as a `###` heading instead of a bullet. */
+  headings?: boolean;
+  /** Include the author's per-plugin comment + description. */
+  descriptions?: boolean;
+}
+
 /** A human-readable markdown rendering of a pack, for forum/gist sharing. */
-export function packToMarkdown(pack: StarterPack): string {
+export function packToMarkdown(pack: StarterPack, opts: MarkdownOptions = {}): string {
+  const headings = opts.headings ?? true;
+  const descriptions = opts.descriptions ?? true;
   const lines: string[] = [];
   lines.push(`## ${pack.name}`);
   const by = pack.author ? ` by ${pack.author}` : "";
@@ -145,10 +188,25 @@ export function packToMarkdown(pack: StarterPack): string {
   );
   if (pack.description) lines.push("", pack.description);
   lines.push("");
-  if (pack.plugins.length) lines.push("**Plugins**");
+  if (pack.plugins.length) lines.push(headings ? "## Plugins" : "**Plugins**");
   for (const p of pack.plugins) {
+    const link = `obsidian://show-plugin?id=${encodeURIComponent(p.id)}`;
     const author = p.author ? ` — ${p.author}` : "";
-    lines.push(`- [${p.name}](obsidian://show-plugin?id=${encodeURIComponent(p.id)})${author}`);
+    const disabledNote = p.enabled === false ? " _(the author keeps this off)_" : "";
+    if (headings) {
+      lines.push(`### [${p.name}](${link})${author}${disabledNote}`);
+      if (descriptions) {
+        if (p.comment) lines.push(`> ${p.comment}`);
+        if (p.description) lines.push(p.description);
+      }
+      lines.push("");
+    } else {
+      lines.push(`- [${p.name}](${link})${author}${disabledNote}`);
+      if (descriptions) {
+        if (p.comment) lines.push(`  - _${p.comment}_`);
+        if (p.description) lines.push(`  - ${p.description}`);
+      }
+    }
   }
   if (themeCount) {
     lines.push("", "**Themes**");

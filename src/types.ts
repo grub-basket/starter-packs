@@ -4,6 +4,16 @@ export interface PackPlugin {
   id: string;
   name: string;
   author: string;
+  /** Optional author-written note, shown between the name and description. */
+  comment?: string;
+  /** Optional author-written description of the plugin / why it's in the pack. */
+  description?: string;
+  /** The author's enable intent — defaults to whether the plugin was enabled in
+   * their vault when the pack was made, and can be overridden per plugin. This
+   * is RECORD-ONLY on import: recipients still install disabled by default (see
+   * enableAfterInstall); the flag just conveys what the author runs. Defaults to
+   * true (omitted from the payload when true, to keep simple packs compact). */
+  enabled?: boolean;
 }
 
 /** A community theme entry. Themes are keyed by display name (Obsidian has no
@@ -71,6 +81,17 @@ export interface PackPayloadV1 {
   n: string; // pack name
   a: string; // pack author
   d?: string; // description
-  p: [string, string, string][];
+  /** Plugin entries. Positional + additive: [id, name, author, comment?,
+   * description?, enabled?]. Trailing defaults (empty comment/description,
+   * enabled=1) are trimmed so a plain plugin stays [id, name, author] — old
+   * decoders keep reading the first three and ignore the rest. `enabled` is
+   * 1|0; absent means 1 (enabled). */
+  p: PluginTuple[];
   t?: [string, string][]; // themes [name, author]
 }
+
+export type PluginTuple =
+  | [string, string, string]
+  | [string, string, string, string]
+  | [string, string, string, string, string]
+  | [string, string, string, string, string, 0 | 1];

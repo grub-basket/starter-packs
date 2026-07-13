@@ -6,10 +6,11 @@ Share your favorite Obsidian plugins **and themes** as a **starter pack** — a 
 
 1. Open **Starter packs** (ribbon icon or command palette).
 2. **New pack** — name it, put your name on it, and tick the plugins (and community themes) from your vault you want to include. A pack can be plugins, themes, or both.
+   - **Annotate each plugin** (optional): add a short **comment** and a **description**, and set an **enable flag** — it defaults to whether *you* have the plugin enabled and you can override it per plugin. The comment/description show on import and in the exported markdown; the enable flag is informational (see Receiving).
 3. **Share** — copy any of:
    - **Link** — `obsidian://starter-packs?d=…` — opens straight into an import preview for anyone with this plugin installed.
    - **Code** — `OSP1:…` — paste-able anywhere, survives forums that mangle links.
-   - **Markdown** — a readable list (every plugin linked to its community page) with the link and code included, ready for a forum post or note.
+   - **Markdown** — a readable list (every plugin linked to its community page) with the link and code included, ready for a forum post or note. Toggle **plugin names as headings** and **include comments & descriptions** to control how rich it is.
 
 You can also **Export as note** — write the pack into your vault as a readable note (every plugin linked, with the import link and code embedded), handy for keeping a copy or posting it somewhere.
 
@@ -20,6 +21,7 @@ Packs are self-contained: the link/code carries the pack name, your name, and ea
 - Click a starter-pack link (Obsidian opens the preview), or run **Import a starter pack** and paste a link or code.
 - The preview shows what's in the pack and what you already have, split into **Plugins** and **Themes**. Install items one at a time, or **Install all missing** — plugins and themes install one after another (spaced out to stay friendly with GitHub's rate limits), with a progress bar in the modal and a notification that keeps counting even if you close the window, so you know exactly when everything is ready.
 - For themes, each row also offers **Apply** once it's installed (Obsidian uses one active theme at a time).
+- Each plugin shows the author's optional **comment and description**, and an **"author: off"** marker if the author keeps it disabled — the enable flag is *informational only*, it never auto-enables anything on your side.
 - **Plugins are installed *disabled* by default**, so nothing runs until you say so. Review the pack, then use **Enable all** (or the per-plugin Enable) to turn them on — and **Disable all** to turn them back off. You can flip the default to auto-enable in settings if you only ever import packs you fully trust.
 - Imported packs are kept under **Shared with me** so you can come back to them later, or **Save as mine** to edit and re-share.
 

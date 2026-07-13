@@ -205,11 +205,19 @@ export class ImportPackModal extends Modal {
     for (const p of pack.plugins) {
       const row = listEl.createDiv({ cls: "starter-packs-plugin-row" });
       const label = row.createDiv({ cls: "starter-packs-plugin-label" });
-      label.createDiv({ text: p.name, cls: "starter-packs-plugin-name" });
+      const nameLine = label.createDiv({ cls: "starter-packs-plugin-name" });
+      nameLine.setText(p.name);
+      // Record-only: what the pack author runs. Recipients still install
+      // disabled by default; this just conveys intent.
+      if (p.enabled === false) {
+        nameLine.createSpan({ cls: "starter-packs-author-flag", text: "author: off" });
+      }
       label.createDiv({
         text: p.author ? `${p.id} — ${p.author}` : p.id,
         cls: "starter-packs-plugin-meta",
       });
+      if (p.comment) label.createDiv({ text: p.comment, cls: "starter-packs-plugin-comment" });
+      if (p.description) label.createDiv({ text: p.description, cls: "starter-packs-plugin-desc" });
 
       const status = pluginStatus(this.app, p.id);
       const inCatalog = this.catalog ? this.catalog.has(p.id) : null;

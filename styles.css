@@ -179,3 +179,79 @@
 .starter-packs-archived .starter-packs-plugin-name {
   color: var(--text-muted);
 }
+
+/* Per-plugin annotations (edit modal) */
+.starter-packs-annotate h4 {
+  margin: 14px 0 2px;
+}
+.starter-packs-picker-hint {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  margin-bottom: 8px;
+}
+.starter-packs-annotate-row {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  padding: 8px;
+  margin-bottom: 8px;
+}
+.starter-packs-annotate-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.starter-packs-annotate-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  flex-shrink: 0;
+}
+.starter-packs-annotate-comment,
+.starter-packs-annotate-desc {
+  width: 100%;
+  margin-bottom: 6px;
+}
+.starter-packs-annotate-desc {
+  resize: vertical;
+  margin-bottom: 0;
+}
+
+/* Markdown export toggles (share modal) */
+.starter-packs-md-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 6px 0;
+}
+.starter-packs-md-option {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+/* Author comment/description + record-only flag (import preview) */
+.starter-packs-plugin-comment {
+  color: var(--text-normal);
+  font-size: var(--font-ui-smaller);
+  font-style: italic;
+  margin-top: 2px;
+}
+.starter-packs-plugin-desc {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  margin-top: 2px;
+}
+.starter-packs-author-flag {
+  margin-left: 8px;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-warning);
+  border: 1px solid var(--text-warning);
+  border-radius: 999px;
+  padding: 0 6px;
+}
