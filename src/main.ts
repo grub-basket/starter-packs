@@ -39,7 +39,10 @@ export default class StarterPacksPlugin extends Plugin {
     this.addCommand({
       id: "create-pack",
       name: "Create a pack",
-      callback: () => new PackEditModal(this.app, this, null).open(),
+      // After saving, land in the pack manager (matches the New-pack flow from
+      // the manager itself, which stays open underneath and refreshes).
+      callback: () =>
+        new PackEditModal(this.app, this, null, () => new ManagePacksModal(this.app, this).open()).open(),
     });
     this.addCommand({
       id: "import-pack",
