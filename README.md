@@ -2,6 +2,8 @@
 
 Share your favorite Obsidian plugins **and themes** as a **starter pack** — a named, curated list you can send to anyone as a link or a short code, the way Bluesky starter packs or mod packs work.
 
+Good fits: creators sharing a recommended setup with their audience, teams onboarding a new vault, or anyone helping a friend get started with Obsidian.
+
 ## Sharing
 
 1. Open **Starter packs** (ribbon icon or command palette).
@@ -70,4 +72,4 @@ The "install a list of plugins" idea isn't new — a few plugins touch this spac
 | **Share as a link or code** (`obsidian://…` / `OSP1:…`) that opens **in-app** | Markdown text you embed in a note |
 | **Preview screen** before installing | No preview |
 
-The full positioning write-up is in [PITCH.md](PITCH.md).
+Starter Packs is deliberately peer-to-peer: a pack is something you hand to someone, not a hosted directory or discovery feed — there's no server behind it.
